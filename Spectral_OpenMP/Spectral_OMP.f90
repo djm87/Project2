@@ -190,7 +190,7 @@ print *,"Q_p_sam",Q_p_sam
   fact_dot = fact_DT * ho / Ss**exp_a
 
  
-  CALL TEXTURE(Phi1, PHI, Phi2, 0, 0, 0, 0, n_steps) ! 
+  CALL TEXTURE(Phi1, PHI, Phi2, 0, 0, 0, 0, n_steps,NCRYS) ! 
  print *,"PHIS",Phi1(100), PHI(100),Phi2(100)
   sizeF = sizeF * DBLE(m_fine)
 
@@ -213,7 +213,10 @@ print *,"Q_p_sam",Q_p_sam
 t_1 = t
 
   do j = 1,n_steps
-
+     
+     !!$OMP PARALLEL DEFAULT(PRIVATE) &
+     !!$omp shared(C6A,SSYSMAT,STRS1PK,SLPRA1,SLPRA2,DG2,STRV,STRESS2BE,KUPD,ISOLER,DTIME) 
+    ! !$omp do
      DO i = 1,NCRYS
          
         !change, start
@@ -236,20 +239,21 @@ t_1 = t
              w_12(i) = dot_product( Fo_ws_12,Super_mat )
              w_13(i) = dot_product( Fo_ws_13,Super_mat )
              w_23(i) = dot_product( Fo_ws_23,Super_mat )
-     end do
+    
+     
 
-
-     call TEXTURE (Phi1, PHI, Phi2, w_12*fact_DT + W_app_pr(2,1)*DT, &
-                                    w_13*fact_DT + W_app_pr(3,1)*DT, &
-                                    w_23*fact_DT + W_app_pr(3,2)*DT, j, n_steps)
-
+     call TEXTURE (Phi1(i), PHI(i), Phi2(i), w_12(i)*fact_DT + W_app_pr(2,1)*DT, &
+                                    w_13(i)*fact_DT + W_app_pr(3,1)*DT, &
+                                    w_23(i)*fact_DT + W_app_pr(3,2)*DT, j, n_steps,1)
+     END DO
      s_dot = s_dot + fact_dot * ( Ss - s_dot )**exp_a * sum_gamma_dot
-
+     
      S11(j) = dot_product(stress_11,s_dot)
      S22(j) = dot_product(stress_22,s_dot)
      S12(j) = dot_product(stress_12,s_dot)
      S13(j) = dot_product(stress_13,s_dot)
      S23(j) = dot_product(stress_23,s_dot)
+     !!$omp end parallel
 
      STRESS_TENSOR_PR = RESHAPE((/S11(j), S12(j), S13(j), &
                                   S12(j), S22(j), S23(j), &
@@ -262,12 +266,12 @@ t_1 = t
      STRESS_VEC(j,4) = STRESS_TENSOR_SA(1,2)
      STRESS_VEC(j,5) = STRESS_TENSOR_SA(1,3)
      STRESS_VEC(j,6) = STRESS_TENSOR_SA(2,3)
-
+  
   enddo
 
 		call cpu_time(t)
 t_2 = t-t_1
-print*, t_2
+
 !
   open (unit=55,file='stressSCP.dat')
   open (unit=56,file='texture.dat')
@@ -285,27 +289,28 @@ print*, t_2
  	  write(56,'(4F20.5)'), Phi1(III)*360/120/m_fine, PHI(III)*360/120/m_fine, Phi2(III)*360/120/m_fine,1.0d0/dble(NCRYS)
 	END DO
  close (56)
+print*, t_2
 
   DEALLOCATE(S11,S22,S12,S13,S23, STRESS_VEC, strain)
 
 end program SCP_FCC
 
 
-SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps)
+SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCRY)
 
   use SCP_VARIABLES
   implicit none
-  double precision, dimension(NCRYS) :: SPhi1, CPhi1, SPHI, CPHI, SPhi2, CPhi2
-  double precision, dimension(NCRYS) :: w21_rec, w31_rec, w32_rec
-  double precision, dimension(NCRYS,9) :: G
+  double precision, dimension(NCRY) :: SPhi1, CPhi1, SPHI, CPHI, SPhi2, CPhi2
+  double precision, dimension(NCRY) :: w21_rec, w31_rec, w32_rec
+  double precision, dimension(NCRY,9) :: G
   double precision GG(9)
-  double precision angles(NCRYS,3)
-  integer, intent(in) :: flag, n_steps
-  double precision, dimension(NCRYS) :: QMAT_11, QMAT_12, QMAT_13, QMAT_21, QMAT_22, QMAT_23, QMAT_31, QMAT_32, QMAT_33
-  double precision, dimension(NCRYS) :: R_11, R_12, R_13, R_21, R_22, R_23, R_31, R_32, R_33
-  double precision, dimension(NCRYS) :: ang, axis_1, axis_2, axis_3
+  double precision angles(NCRY,3)
+  integer, intent(in) :: flag, n_steps, NCRY
+  double precision, dimension(NCRY) :: QMAT_11, QMAT_12, QMAT_13, QMAT_21, QMAT_22, QMAT_23, QMAT_31, QMAT_32, QMAT_33
+  double precision, dimension(NCRY) :: R_11, R_12, R_13, R_21, R_22, R_23, R_31, R_32, R_33
+  double precision, dimension(NCRY) :: ang, axis_1, axis_2, axis_3
   integer :: i
-  double precision, dimension(NCRYS) :: Phi1, PHI, Phi2
+  double precision, dimension(NCRY) :: Phi1, PHI, Phi2
 
   double precision twoPI, to_rad,to_deg
 
@@ -344,7 +349,7 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps)
   QMAT_33 = CPHI
 
   if (flag == 0) then
-     do i = 1,NCRYS
+     do i = 1,NCRY
         G(i,1) = Q_p_sam(1)*QMAT_11(i) + Q_p_sam(2)*QMAT_21(i) + Q_p_sam(3)*QMAT_31(i)
         G(i,2) = Q_p_sam(4)*QMAT_11(i) + Q_p_sam(5)*QMAT_21(i) + Q_p_sam(6)*QMAT_31(i)
         G(i,3) = Q_p_sam(7)*QMAT_11(i) + Q_p_sam(8)*QMAT_21(i) + Q_p_sam(9)*QMAT_31(i)
@@ -413,7 +418,7 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps)
   R_33 = (1.d0 - axis_3**2)*dcos(ang) + axis_3**2
 
   ! ind(1,:) is the first column of "g"; Vect_Rot is transpose so that is why they have the same indices. This is realy rotation
-  do i = 1,NCRYS
+  do i = 1,NCRY
      G(i,1) = R_11(i)*QMAT_11(i) + R_21(i)*QMAT_21(i) + R_31(i)*QMAT_31(i) 
      G(i,2) = R_12(i)*QMAT_11(i) + R_22(i)*QMAT_21(i) + R_32(i)*QMAT_31(i)
      G(i,3) = R_13(i)*QMAT_11(i) + R_23(i)*QMAT_21(i) + R_33(i)*QMAT_31(i)
@@ -430,7 +435,7 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps)
 
   if (flag == n_steps) then
 
-     do i = 1,NCRYS
+     do i = 1,NCRY
         GG(:) = G(i,:)
         G(i,1) = Q_p_sam(1)*GG(1) + Q_p_sam(4)*GG(2) + Q_p_sam(7)*GG(3)
         G(i,2) = Q_p_sam(2)*GG(1) + Q_p_sam(5)*GG(2) + Q_p_sam(8)*GG(3)
