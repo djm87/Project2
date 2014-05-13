@@ -166,7 +166,13 @@ V_eig(3,3) =   V_eig(1,1)*V_eig(2,2) - V_eig(2,1)*V_eig(1,2)
   ALLOCATE(S23(1:n_steps))
   ALLOCATE(STRESS_VEC(1:n_steps,1:6))
   ALLOCATE(strain(n_steps))
-
+ !Initialize S
+ S11=0
+ S22=0
+ S12=0
+ S13=0
+ S23=0
+ 
   D_unit = D_eig/eps_dot
 
   DT = Total_Time/n_steps
@@ -214,9 +220,9 @@ t_1 = t
 
   do j = 1,n_steps
      
-     !!$OMP PARALLEL DEFAULT(PRIVATE) &
-     !!$omp shared(C6A,SSYSMAT,STRS1PK,SLPRA1,SLPRA2,DG2,STRV,STRESS2BE,KUPD,ISOLER,DTIME) 
-    ! !$omp do
+     !$OMP PARALLEL DEFAULT(shared)& 
+     !$omp private(SC,Super_mat,i)
+     !$omp do
      DO i = 1,NCRYS
          
         !change, start
@@ -229,32 +235,42 @@ t_1 = t
         Super_mat = dcmplx( dcos( SC ), dsin( SC ) )
 
         sum_gamma_dot(i) = dot_product( Fo_GD,Super_mat )
-		if ((j.eq.1).and.(i.eq.100)) print *,"sum_gamma_dot", sum_gamma_dot(100)
-        stress_11(i) = dot_product( Fo_ns_11,Super_mat ) 
-        stress_22(i) = dot_product( Fo_ns_22,Super_mat )
-        stress_12(i) = dot_product( Fo_ss_12,Super_mat )
-        stress_13(i) = dot_product( Fo_ss_13,Super_mat )
-        stress_23(i) = dot_product( Fo_ss_23,Super_mat )
+	 
+	stress_11(i) = dot_product( Fo_ns_11,Super_mat ) 
+	stress_22(i) = dot_product( Fo_ns_22,Super_mat )
+	stress_12(i) = dot_product( Fo_ss_12,Super_mat )
+	stress_13(i) = dot_product( Fo_ss_13,Super_mat )
+	stress_23(i) = dot_product( Fo_ss_23,Super_mat )
 
-             w_12(i) = dot_product( Fo_ws_12,Super_mat )
-             w_13(i) = dot_product( Fo_ws_13,Super_mat )
-             w_23(i) = dot_product( Fo_ws_23,Super_mat )
-    
-     
+	w_12(i) = dot_product( Fo_ws_12,Super_mat )
+	w_13(i) = dot_product( Fo_ws_13,Super_mat )
+	w_23(i) = dot_product( Fo_ws_23,Super_mat )
 
-     call TEXTURE (Phi1(i), PHI(i), Phi2(i), w_12(i)*fact_DT + W_app_pr(2,1)*DT, &
-                                    w_13(i)*fact_DT + W_app_pr(3,1)*DT, &
-                                    w_23(i)*fact_DT + W_app_pr(3,2)*DT, j, n_steps,1)
-     END DO
-     s_dot = s_dot + fact_dot * ( Ss - s_dot )**exp_a * sum_gamma_dot
-     
-     S11(j) = dot_product(stress_11,s_dot)
-     S22(j) = dot_product(stress_22,s_dot)
-     S12(j) = dot_product(stress_12,s_dot)
-     S13(j) = dot_product(stress_13,s_dot)
-     S23(j) = dot_product(stress_23,s_dot)
-     !!$omp end parallel
+	s_dot(i) = s_dot(i) + fact_dot * ( Ss - s_dot(i) )**exp_a * sum_gamma_dot(i)
+        ENDDO
+   !$omp enddo
 
+	 
+	 !S11(j) = dot_product(stress_11,s_dot)
+     !S22(j) = dot_product(stress_22,s_dot)
+     !S12(j) = dot_product(stress_12,s_dot)
+     !S13(j) = dot_product(stress_13,s_dot)
+     !S23(j) = dot_product(stress_23,s_dot)
+	 !$omp do reduction(+:s11,s22,s12,s13,s23)
+	 DO i = 1,NCRYS
+		 S11(j) =S11(j) + stress_11(i)*s_dot(i)
+		 S22(j) =S22(j) + stress_22(i)*s_dot(i)
+		 S12(j) =S12(j) + stress_12(i)*s_dot(i)
+		 S13(j) =S13(j) + stress_13(i)*s_dot(i)
+		 S23(j) =S23(j) + stress_23(i)*s_dot(i)
+	 ENDDO
+     !$omp enddo
+	 !$omp barrier
+     !$omp end parallel
+	 !if (j .eq. n_steps-4) THEN 
+	 !print*,"S",S11(j),S22(j),S12(j),S13(j),S23(j)
+	 !endif
+	 
      STRESS_TENSOR_PR = RESHAPE((/S11(j), S12(j), S13(j), &
                                   S12(j), S22(j), S23(j), &
                                   S13(j), S23(j), - ( S11(j) + S22(j) )/), (/3,3/))
@@ -266,7 +282,12 @@ t_1 = t
      STRESS_VEC(j,4) = STRESS_TENSOR_SA(1,2)
      STRESS_VEC(j,5) = STRESS_TENSOR_SA(1,3)
      STRESS_VEC(j,6) = STRESS_TENSOR_SA(2,3)
-  
+    
+	
+    call TEXTURE (Phi1, PHI, Phi2, w_12*fact_DT + W_app_pr(2,1)*DT, &
+							w_13*fact_DT + W_app_pr(3,1)*DT, &
+							w_23*fact_DT + W_app_pr(3,2)*DT, j, n_steps,NCRYS)
+
   enddo
 
 		call cpu_time(t)
