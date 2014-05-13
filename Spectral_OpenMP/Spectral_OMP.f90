@@ -525,7 +525,6 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
 		ENDDO
 		!$omp enddo 
 	ENDIF
- 
 	!$omp end parallel
   RETURN
 
