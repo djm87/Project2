@@ -74,7 +74,7 @@
 
       OPEN(7, FILE=FILENAME2) 
       OPEN(9, FILE=FILENAME) 
-      OPEN(10, FILE=FILENAME1, STATUS='old',ACCESS='append')                
+      OPEN(10, FILE=FILENAME1, STATUS='replace')                
       
       ALLOCATE (SSYSMAT(3,3,12,NC)) 
       ALLOCATE (ELSTIF(6,6,NC))

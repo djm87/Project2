@@ -3,7 +3,6 @@
 	  !USE cudafor
 	  !USE CUDA_Kernels
 	  USE Variables
-
 	  
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER (I-N)
       
@@ -29,29 +28,26 @@
 
       
 
-      CALL POLYPLMDL(FILENAME,FILENAME2,IPOINT, &
-                       TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
+      CALL POLYPLMDL(FILENAME,FILENAME2,IPOINT,NSTEP,IDEF, &
+                       DT,TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
                        DEFGRDYX,DEFGRDYY,DEFGRDYZ,DEFGRDZX, &
-                       DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2)
+                       DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2,NC)
 
 
 
-      !pause
+      
       END PROGRAM POLYPL
 
 
-      SUBROUTINE POLYPLMDL(FILENAME,FILENAME2,IPOINT, &
-                       TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
+      SUBROUTINE POLYPLMDL(FILENAME,FILENAME2,IPOINT,NSTEP,IDEF, &
+                       DT,TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
                        DEFGRDYX,DEFGRDYY,DEFGRDYZ,DEFGRDZX, &
-                       DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2)
+                       DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2,NC)
       USE Variables
-      USE CPSOLV
-
-
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER (I-N)
       
       DIMENSION STRS2FEM(6),ESV(6,NC),C6A(6,NSLIP,NC),B6A(6,NSLIP,NC),&
-               TEMP3(3,3,NSLIP,NC),TEMP2(3,3),TEMP(3,3),FFFF(3,3,NC), S_CHECK(6)
+               TEMP3(3,3,NSLIP,NC),TEMP2(3,3),TEMP(3,3),FFFF(3,3,NC)
    
       DIMENSION PHI1(*), PHI(*), PHI2(*)
      
@@ -100,7 +96,7 @@
 
       TEXOUT = DT*NSTEP
       TAU = 0.0D0
-    cpu_t7=0.0
+
       call cpu_time(toti)
 
 
@@ -157,19 +153,14 @@
       SCAUCHYAVG(5) = 0.0D0
       SCAUCHYAVG(6) = 0.0D0
 	  
-    
     DO IC = 1, NC
+	
 		CALL MATMATMLT(DEF2(1,1), DEF2(1,1), TEMP(1,1), 2) 
 
 		CALL MATMATMLT(TEMP(1,1), DEFPI1(1,1,IC), TEMP2(1,1), 1) 
 
 		CALL MATMATMLT(DEFPI1(1,1,IC), TEMP2(1,1), FFFF(1,1,IC), 2)
-    END DO
-call cpu_time(ti)
-    !$OMP PARALLEL DEFAULT(SHARED) PRIVATE(IC,I)
-
-    !$OMP DO 
-    DO IC = 1, NC
+		
 		ESV(1,IC)=FFFF(1,1,IC)-1.0D0
 		ESV(2,IC)=FFFF(2,2,IC)-1.0D0
 		ESV(3,IC)=FFFF(3,3,IC)-1.0D0
@@ -239,36 +230,22 @@ call cpu_time(ti)
 		
 		
     ENDDO
-!$OMP END DO
-!$OMP END PARALLEL
-
-	call cpu_time(tf)
-	cpu_t1=cpu_t1+tf-ti
 
 !===================================================================================
 !===================================================================================     
     !DO IC = 1, NC
-
-        !print *,"ISOLVER = ", ISOLER
-        !print *,"DT = ", DT
-        !print *,"C6A = ", C6A
-        !print *,"SLPRA1 = ", SLPRA1
-        !print *,"SLPRA2 = ", SLPRA2
-        !print *,"SSYSMAT = ", SSYSMAT
-        !print *,"STRS1PK = ", STRS1PK
-        !print *,"ISTEP = ", ISTEP
 		call cpu_time(ti)
 		CALL CPSOLV(ISOLER,DT,C6A,SLPRA1,SLPRA2, &
-		                 SSYSMAT, 1, STRS1PK, ISTEP,cpu_t6,cpu_t7,cpu_t8)
+		                 SSYSMAT, 1, STRS1PK, ISTEP)
 		call cpu_time(tf)
-		cpu_t2=cpu_t2+tf-ti
+		cpu_t1=cpu_t1+tf-ti
 	!ENDDO
-	call cpu_time(ti)
+	
 	DO IC = 1, NC
    		!IF(IC ==1 .and. ISTEP == 1) print *,"STRS1PK_1 = ", STRS1PK(1,IC)
 		!IF(IC ==1 .and. ISTEP == 2) print *,"STRS1PK_2 = ", STRS1PK(1,IC)
 		!IF(IC ==1 .and. ISTEP == 3) print *,"STRS1PK_3 = ", STRS1PK(1,IC) 
-		!call cpu_time(ti)
+		call cpu_time(ti)
 		!IF(IC ==1 .and. ISTEP == 1) print *,"STRS1PK = ", STRS1PK(1,IC)
     		!IF(IC ==1 .and. ISTEP == 1) print *,"DG2 = ", DG2(6,IC)  
 		CALL DEFPIUPD(IC,IIPT,IC,SSYSMAT,DEFPI1,DEFPI2, &
@@ -279,7 +256,7 @@ call cpu_time(ti)
 		!IF(IC ==1 .and. ISTEP == 1) print *,"STRS2FEM_1 = ", STRS2FEM(3)
 		!IF(IC ==1 .and. ISTEP == 2) print *,"STRS2FEM_2 = ", STRS2FEM(3)
 		!IF(IC ==1 .and. ISTEP == 3) print *,"STRS2FEM_3 = ", STRS2FEM(3)
-		!call cpu_time(tf)
+		call cpu_time(tf)
 		cpu_t2 = cpu_t2 + tf-ti
 		
 		!SCAUCHYAVG is zeroed each ISTEP
@@ -291,18 +268,11 @@ call cpu_time(ti)
 		SCAUCHYAVG(6) = SCAUCHYAVG(6)+STRS2FEM(6)/dble(NC)
 		
     ENDDO ! IC
-    call cpu_time(tf)
-    cpu_t3=cpu_t3+tf-ti
 !===================================================================================
-!===================================================================================  
-	    
+!===================================================================================      
       if(TAU.EQ.TEXOUT)then
-	call cpu_time(ti)
-
       CALL EVOLTEXTURE(DEFPI1,DEFPI2,DEFGRDN,DEFGRDC,NC,QC2S, &
                       PHI1,PHI,PHI2)
-      call cpu_time(tf)
-      cpu_t4=cpu_t4+tf-ti
 
       WRITE(7,*)TAU
       DO IC = 1,NC
@@ -322,41 +292,16 @@ call cpu_time(ti)
       ENDDO ! ISTEP
 
 		call cpu_time(totf)
-		cpu_t5=totf-toti
-        
-    S_check(1) = SCAUCHYAVG(1)-188.79851
-    S_check(2) = SCAUCHYAVG(2)-4.49906
-    S_check(3) = SCAUCHYAVG(3)+188.82886
-    S_check(4) = SCAUCHYAVG(4)-2.59096
-    S_check(5) = SCAUCHYAVG(5)-1.68241
-    S_check(6) = SCAUCHYAVG(6)-1.27922
-    write(*,'(7F11.5)') STRAINLF, & !DABS(EQVST*TAU), 
-                  SCAUCHYAVG(1),SCAUCHYAVG(2),SCAUCHYAVG(3), &
-                  SCAUCHYAVG(4),SCAUCHYAVG(5),SCAUCHYAVG(6)
-    
-    DO I = 1,6
-        IF(S_check(I) .gt. 0.01) THEN
-            print *,"Failed"
-        ELSE
-            print *,"Passed"
-        END IF
-     END DO
-    
-  
+		cpu_t3=totf-toti
+		
   WRITE(*,'(A70)')               'Time (seconds) and Percentage Time                                '
   WRITE(*,'(A70)')               '======================================================================='
- !WRITE(*,'(A39,4X,2(1PE13.4))') 'CUDA                               ', cuda_t(1), cuda_t(1)/(totf-toti)*1.e-1_rp
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'Section 1                          ', cpu_t1, cpu_t1/(totf-toti)*100
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'CPSOLV                             ', cpu_t2, cpu_t2/(totf-toti)*100
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'SOLVER                             ', cpu_t6, cpu_t6/(totf-toti)*100 
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'DO LOOP 1                          ', cpu_t7, cpu_t7/(totf-toti)*100
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'DO LOOP 2                          ', cpu_t8, cpu_t8/(totf-toti)*100
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'DEFPIUPD                           ', cpu_t3, cpu_t3/(totf-toti)*100
-  WRITE(*,'(A39,4X,2(1PE13.4))') 'Texture Evolve                     ', cpu_t4, cpu_t4/(totf-toti)*100
-
+ !WRITE(*,'(A39,4X,2(1PE13.4))') 'CUDA            	                ', cuda_t(1), cuda_t(1)/(totf-toti)*1.e-1_rp
+  WRITE(*,'(A39,4X,2(1PE13.4))') 'CPSOLV                            ', cpu_t1, cpu_t1/(totf-toti)*100
+  WRITE(*,'(A39,4X,2(1PE13.4))') 'DEFPIUPD                          ', cpu_t2, cpu_t2/(totf-toti)*100
   WRITE(*,'(A70)')               '======================================================================='
 
-  WRITE(*,'(A39,4X,1PE13.4)')    'Total                                 ', cpu_t5
+  WRITE(*,'(A39,4X,1PE13.4)')    'Total                                 ', cpu_t3
 		
 
       CLOSE(7)        
@@ -811,7 +756,7 @@ call cpu_time(ti)
       
       
 !---+----+----+----+----+----+----+----+----+----+----+----+----+----+--
-SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
+      SUBROUTINE CPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
                        SSYSMAT,KUPD,STRS1PK, ISTEP)
 	  USE Variables
       IMPLICIT DOUBLE PRECISION (A-H,O-Z), INTEGER (I-N)
@@ -824,7 +769,7 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
       COMMON /C6P6AMAT/ C6P6A(6,6,NSLIP) !Local value. Each crystal value is set to zero
       DIMENSION SLPRESA2(NSLIP),DGDTPKA(NSLIP), &
                 EROR(6),TJINV(6,6),DELTPK(6), &
-                ABSDELTPK(6),ABSDG(NSLIP,NC),SLIPSIGN(NSLIP), &
+                ABSDELTPK(6),ABSDG(NSLIP),SLIPSIGN(NSLIP), &
                 SLPRESA2TMP(NSLIP),HB(NSLIP),TPKOLD(6)
       DIMENSION SLPRA1(NSLIP,*),SLPRA2(NSLIP,*), &
                C6A(6,NSLIP,NC),SSYSMAT(3,3,NSLIP,*),STRS1PK(6,*),INDX(6)
@@ -883,12 +828,12 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
 		
 		  ABSDGMAX = 0.0D0
 		  DO I = 1,NSLIP          
-			 ABSDG(I,IC) = 0.0D0
+			 ABSDG(I) = 0.0D0
 			 DG2(I,IC) = 0.0D0
 			 IF(DRFCE2(I).NE.0.0D0)THEN
-				ABSDG(I,IC) = DGDO*DABS(DRFCE2(I)/SLPRESA2(I))**EXPN
-				DG2(I,IC) =ABSDG(I,IC)*SLIPSIGN(I)
-				ABSDGMAX = DMAX1(ABSDGMAX,ABSDG(I,IC))
+				ABSDG(I) = DGDO*DABS(DRFCE2(I)/SLPRESA2(I))**EXPN
+				DG2(I,IC) =ABSDG(I)*SLIPSIGN(I)
+				ABSDGMAX = DMAX1(ABSDGMAX,ABSDG(I))
 			 ENDIF
 		  ENDDO
 		!	IF(IC ==32 .and. ISTEP == 1) write(*,*),"DG21 = ", DG2(6,IC)
@@ -995,11 +940,11 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
 		  ENDDO
 
 		  DO I = 1,NSLIP         
-			 ABSDG(I,IC) = 0.0D0
+			 ABSDG(I) = 0.0D0
 			 DG2(I,IC) = 0.0D0
 			 IF(DRFCE2(I).NE.0.0D0)THEN
-			  ABSDG(I,IC) = DGDO*DABS(DRFCE2(I)/SLPRESA2(I))**EXPN
-			  DG2(I,IC) =SIGN(ABSDG(I,IC),DRFCE2(I))
+			  ABSDG(I) = DGDO*DABS(DRFCE2(I)/SLPRESA2(I))**EXPN
+			  DG2(I,IC) =SIGN(ABSDG(I),DRFCE2(I))
 			 ENDIF
 		  ENDDO
 		  
@@ -1015,7 +960,7 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
 
 		  DO II = 1,NSLIP
 			 DO I = 1,NSLIP
-			   SLPRESA2TMP(I) = SLPRESA2TMP(I)+HB(II)*ABSDG(II,IC)
+			   SLPRESA2TMP(I) = SLPRESA2TMP(I)+HB(II)*ABSDG(II)
 			 ENDDO
 		  ENDDO
 
@@ -1044,14 +989,14 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
 			DO I = 1,NSLIP
 				SLPRA2(I,IC)=SLPRESA2(I)
 				SLPRA1(I,IC)=SLPRESA2(I)
-				DGMAX = DMAX1(DGMAX,ABSDG(I,IC))
+				DGMAX = DMAX1(DGMAX,ABSDG(I))
 			ENDDO
 		ENDIF
 		
 	ENDDO !IC
 	RETURN
 	END    
-                  
+            
             
 !---+----+----+----+----+----+----+----+----+----+----+----+----+----+--
 !
@@ -1167,7 +1112,7 @@ SUBROUTINE SCPSOLV(ISOLER,DTIME,C6A,SLPRA1,SLPRA2, &
       DIMENSION SSYSMAT(3,3,NSLIP,*),DEFPI1(3,3,*), &
                DEFPI2(3,3,*)	
       DIMENSION DEFPI2TEMP(3,3),STRESPK(3,3), &
-               TEMP(3,3),STRS2FEM(6)!, DETDEFS2(1)
+               TEMP(3,3),STRS2FEM(6), DETDEFS2
 
       DVELP(1,1) = 0.0D0
       DVELP(1,2) = 0.0D0
