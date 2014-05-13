@@ -187,7 +187,6 @@ V_eig(3,3) =   V_eig(1,1)*V_eig(2,2) - V_eig(2,1)*V_eig(1,2)
   endif
 
   Q_p_sam = reshape((V_eig), (/9/))
-print *,"Q_p_sam",Q_p_sam
   W_app_pr = matmul(transpose(V_eig), matmul(W_app_sa,V_eig))
 
   fact_1 = 2.d0 / product(sizeF)
@@ -198,6 +197,7 @@ print *,"Q_p_sam",Q_p_sam
  
   CALL TEXTURE(Phi1, PHI, Phi2, 0, 0, 0, 0, n_steps,NCRYS) ! 
  print *,"PHIS",Phi1(100), PHI(100),Phi2(100)
+ !pause
   sizeF = sizeF * DBLE(m_fine)
 
   fact_s = 2.d0*PI / sizeF(1)
@@ -265,7 +265,6 @@ t_1 = t
 		 S23(j) =S23(j) + stress_23(i)*s_dot(i)
 	 ENDDO
      !$omp enddo
-	 !$omp barrier
      !$omp end parallel
 	 !if (j .eq. n_steps-4) THEN 
 	 !print*,"S",S11(j),S22(j),S12(j),S13(j),S23(j)
@@ -330,188 +329,204 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
   double precision, dimension(NCRY) :: QMAT_11, QMAT_12, QMAT_13, QMAT_21, QMAT_22, QMAT_23, QMAT_31, QMAT_32, QMAT_33
   double precision, dimension(NCRY) :: R_11, R_12, R_13, R_21, R_22, R_23, R_31, R_32, R_33
   double precision, dimension(NCRY) :: ang, axis_1, axis_2, axis_3
-  integer :: i
+  integer :: i,k
   double precision, dimension(NCRY) :: Phi1, PHI, Phi2
 
   double precision twoPI, to_rad,to_deg
 
   to_rad = (PI / 180.d0)
   to_deg = 1.d0 / to_rad
-    !change, start, transfering of r,s,t into euler angles in radians
-    if (flag.ne.0) then
-        Phi1 = Phi1*360/120/m_fine;
-        Phi1 = Phi1*to_rad;
-        PHI = PHI*360/120/m_fine;
-        PHI = PHI*to_rad;
-        Phi2 = Phi2*360/120/m_fine;
-        Phi2 = Phi2*to_rad;
-    end if
-    !change, end
   twoPI = 2.d0*PI
   angles = 0.d0
-  
+    
+    
+	!$OMP PARALLEL DEFAULT(shared)
+	if (flag == 0) then
+	    !$omp do
+	    DO k = 1,NCRYS
+			
+			SPhi1(k) = DSIN(Phi1(k))
+			CPhi1(k) = DCOS(Phi1(k))
+			SPHI(k)  = DSIN(PHI(k))
+			CPHI(k)  = DCOS(PHI(k))
+			SPhi2(k) = DSIN(Phi2(k))
+			CPhi2(k) = DCOS(Phi2(k))
+
+			QMAT_11(k) = CPhi1(k)*CPhi2(k)-SPhi1(k)*CPHI(k)*SPhi2(k)
+			QMAT_12(k) = -CPhi1(k)*SPhi2(k)-SPhi1(k)*CPHI(k)*CPhi2(k)
+			QMAT_13(k) = SPhi1(k)*SPHI(k)
+			QMAT_21(k) = SPhi1(k)*CPhi2(k)+CPhi1(k)*CPHI(k)*SPhi2(k)
+			QMAT_22(k) = -SPhi1(k)*SPhi2(k)+CPhi1(k)*CPHI(k)*CPhi2(k)
+			QMAT_23(k) = -CPhi1(k)*SPHI(k)
+			QMAT_31(k) = SPHI(k)*SPhi2(k)
+			QMAT_32(k) = SPHI(k)*CPhi2(k)
+			QMAT_33(k) = CPHI(k)
+
+	  
+			G(k,1) = Q_p_sam(1)*QMAT_11(k) + Q_p_sam(2)*QMAT_21(k) + Q_p_sam(3)*QMAT_31(k)
+			G(k,2) = Q_p_sam(4)*QMAT_11(k) + Q_p_sam(5)*QMAT_21(k) + Q_p_sam(6)*QMAT_31(k)
+			G(k,3) = Q_p_sam(7)*QMAT_11(k) + Q_p_sam(8)*QMAT_21(k) + Q_p_sam(9)*QMAT_31(k)
+			G(k,4) = Q_p_sam(1)*QMAT_12(k) + Q_p_sam(2)*QMAT_22(k) + Q_p_sam(3)*QMAT_32(k)
+			G(k,5) = Q_p_sam(4)*QMAT_12(k) + Q_p_sam(5)*QMAT_22(k) + Q_p_sam(6)*QMAT_32(k)
+			G(k,6) = Q_p_sam(7)*QMAT_12(k) + Q_p_sam(8)*QMAT_22(k) + Q_p_sam(9)*QMAT_32(k)
+			G(k,7) = Q_p_sam(1)*QMAT_13(k) + Q_p_sam(2)*QMAT_23(k) + Q_p_sam(3)*QMAT_33(k)
+			G(k,8) = Q_p_sam(4)*QMAT_13(k) + Q_p_sam(5)*QMAT_23(k) + Q_p_sam(6)*QMAT_33(k)
+			G(k,9) = Q_p_sam(7)*QMAT_13(k) + Q_p_sam(8)*QMAT_23(k) + Q_p_sam(9)*QMAT_33(k)
+
+			if(abs(G(k,9)) == 1) THEN
+				angles(k,1) = dacos(G(k,1))
+				angles(k,2) = dacos(G(k,9))
+				angles(k,3) = 0.
+
+			if(G(k,2) < 0) THEN
+			   angles(k,1) = twoPI - angles(k,1)
+			endif
+			else
+				angles(k,1) = datan2(G(k,7),-1*G(k,8))
+				angles(k,2) = dacos(G(k,9))
+				angles(k,3) = datan2(G(k,3),G(k,6))
+			endif
+
+			if(angles(k,1) < 0) THEN
+				angles(k,1) = angles(k,1)+ twoPI
+			endif
+				if(angles(k,2) < 0) THEN
+				angles(k,2) = angles(k,2)+ twoPI
+			endif
+				if(angles(k,3) < 0) THEN
+				angles(k,3) = angles(k,3)+ twoPI
+			endif
+			!change, start,  transfering of euler angles in radians into r,s,t
+				angles(k,:) = NINT( to_deg*angles(k,:)*120*m_fine/360 )
+			!change, end
+
+			Phi1(k) = angles(k,1)
+			PHI(k)  = angles(k,2)
+			Phi2(k) = angles(k,3)
+		ENDDO
+	else
+		!$omp do
+	    DO k = 1,NCRYS
+			
+			!change, start, transferring of r,s,t into euler angles in radians
+			Phi1(k) = Phi1(k)*360/120/m_fine;
+			Phi1(k) = Phi1(k)*to_rad;
+			PHI(k) = PHI(k)*360/120/m_fine;
+			PHI(k) = PHI(k)*to_rad;
+			Phi2(k) = Phi2(k)*360/120/m_fine;
+			Phi2(k) = Phi2(k)*to_rad;
+
+			SPhi1(k) = DSIN(Phi1(k))
+			CPhi1(k) = DCOS(Phi1(k))
+			SPHI(k)  = DSIN(PHI(k))
+			CPHI(k)  = DCOS(PHI(k))
+			SPhi2(k) = DSIN(Phi2(k))
+			CPhi2(k) = DCOS(Phi2(k))
+
+			QMAT_11(k) = CPhi1(k)*CPhi2(k)-SPhi1(k)*CPHI(k)*SPhi2(k)
+			QMAT_12(k) = -CPhi1(k)*SPhi2(k)-SPhi1(k)*CPHI(k)*CPhi2(k)
+			QMAT_13(k) = SPhi1(k)*SPHI(k)
+			QMAT_21(k) = SPhi1(k)*CPhi2(k)+CPhi1(k)*CPHI(k)*SPhi2(k)
+			QMAT_22(k) = -SPhi1(k)*SPhi2(k)+CPhi1(k)*CPHI(k)*CPhi2(k)
+			QMAT_23(k) = -CPhi1(k)*SPHI(k)
+			QMAT_31(k) = SPHI(k)*SPhi2(k)
+			QMAT_32(k) = SPHI(k)*CPhi2(k)
+			QMAT_33(k) = CPHI(k)
+
+			ang(k) = dsqrt(w21_rec(k)**2 + w31_rec(k)**2 + w32_rec(k)**2)
+			if(ang(k) == 0) THEN
+				axis_1(k) = 1.d0 
+				axis_2(k) = 0.
+				axis_3(k) = 0.
+			else
+				axis_1(k) =  w32_rec(k)/ang(k)
+				axis_2(k) = -w31_rec(k)/ang(k)
+				axis_3(k) =  w21_rec(k)/ang(k)
+			endif
+
+			R_11(k) = (1.d0 - axis_1(k)**2)*dcos(ang(k)) + axis_1(k)**2
+			R_12(k) = axis_1(k)*axis_2(k)*(1.d0 - dcos(ang(k))) + axis_3(k)*dsin(ang(k))
+			R_13(k) = axis_1(k)*axis_3(k)*(1.d0 - dcos(ang(k))) - axis_2(k)*dsin(ang(k))
+			R_21(k) = axis_1(k)*axis_2(k)*(1.d0 - dcos(ang(k))) - axis_3(k)*dsin(ang(k))
+			R_22(k) = (1.d0 - axis_2(k)**2)*dcos(ang(k)) + axis_2(k)**2
+			R_23(k) = axis_2(k)*axis_3(k)*(1.d0 - dcos(ang(k))) + axis_1(k)*dsin(ang(k))
+			R_31(k) = axis_1(k)*axis_3(k)*(1.d0 - dcos(ang(k))) + axis_2(k)*dsin(ang(k))
+			R_32(k) = axis_2(k)*axis_3(k)*(1.d0 - dcos(ang(k))) - axis_1(k)*dsin(ang(k))
+			R_33(k) = (1.d0 - axis_3(k)**2)*dcos(ang(k)) + axis_3(k)**2
+
+			! ind(1,:) is the first column of "g"; Vect_Rot is transpose so that is why they have the same indices. This is really rotation
+			G(k,1) = R_11(k)*QMAT_11(k) + R_21(k)*QMAT_21(k) + R_31(k)*QMAT_31(k) 
+			G(k,2) = R_12(k)*QMAT_11(k) + R_22(k)*QMAT_21(k) + R_32(k)*QMAT_31(k)
+			G(k,3) = R_13(k)*QMAT_11(k) + R_23(k)*QMAT_21(k) + R_33(k)*QMAT_31(k)
+			G(k,4) = R_11(k)*QMAT_12(k) + R_21(k)*QMAT_22(k) + R_31(k)*QMAT_32(k)
+			G(k,5) = R_12(k)*QMAT_12(k) + R_22(k)*QMAT_22(k) + R_32(k)*QMAT_32(k)
+			G(k,6) = R_13(k)*QMAT_12(k) + R_23(k)*QMAT_22(k) + R_33(k)*QMAT_32(k)
+			G(k,7) = R_11(k)*QMAT_13(k) + R_21(k)*QMAT_23(k) + R_31(k)*QMAT_33(k)
+			G(k,8) = R_12(k)*QMAT_13(k) + R_22(k)*QMAT_23(k) + R_32(k)*QMAT_33(k)
+			G(k,9) = R_13(k)*QMAT_13(k) + R_23(k)*QMAT_23(k) + R_33(k)*QMAT_33(k)
 
 
-  SPhi1 = DSIN(Phi1)
-  CPhi1 = DCOS(Phi1)
-  SPHI  = DSIN(PHI)
-  CPHI  = DCOS(PHI)
-  SPhi2 = DSIN(Phi2)
-  CPhi2 = DCOS(Phi2)
+			! In the last time increment transform the texture in the sample frame
+			!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  QMAT_11 = CPhi1*CPhi2-SPhi1*CPHI*SPhi2
-  QMAT_12 = -CPhi1*SPhi2-SPhi1*CPHI*CPhi2
-  QMAT_13 = SPhi1*SPHI 
-  QMAT_21 = SPhi1*CPhi2+CPhi1*CPHI*SPhi2
-  QMAT_22 = -SPhi1*SPhi2+CPhi1*CPHI*CPhi2
-  QMAT_23 = -CPhi1*SPHI
-  QMAT_31 = SPHI*SPhi2
-  QMAT_32 = SPHI*CPhi2
-  QMAT_33 = CPHI
+			if (flag == n_steps) then
+				GG(:) = G(k,:)
+				G(k,1) = Q_p_sam(1)*GG(1) + Q_p_sam(4)*GG(2) + Q_p_sam(7)*GG(3)
+				G(k,2) = Q_p_sam(2)*GG(1) + Q_p_sam(5)*GG(2) + Q_p_sam(8)*GG(3)
+				G(k,3) = Q_p_sam(3)*GG(1) + Q_p_sam(6)*GG(2) + Q_p_sam(9)*GG(3)
+				G(k,4) = Q_p_sam(1)*GG(4) + Q_p_sam(4)*GG(5) + Q_p_sam(7)*GG(6) 
+				G(k,5) = Q_p_sam(2)*GG(4) + Q_p_sam(5)*GG(5) + Q_p_sam(8)*GG(6)
+				G(k,6) = Q_p_sam(3)*GG(4) + Q_p_sam(6)*GG(5) + Q_p_sam(9)*GG(6)
+				G(k,7) = Q_p_sam(1)*GG(7) + Q_p_sam(4)*GG(8) + Q_p_sam(7)*GG(9)
+				G(k,8) = Q_p_sam(2)*GG(7) + Q_p_sam(5)*GG(8) + Q_p_sam(8)*GG(9)
+				G(k,9) = Q_p_sam(3)*GG(7) + Q_p_sam(6)*GG(8) + Q_p_sam(9)*GG(9)
+			endif
+			!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  if (flag == 0) then
-     do i = 1,NCRY
-        G(i,1) = Q_p_sam(1)*QMAT_11(i) + Q_p_sam(2)*QMAT_21(i) + Q_p_sam(3)*QMAT_31(i)
-        G(i,2) = Q_p_sam(4)*QMAT_11(i) + Q_p_sam(5)*QMAT_21(i) + Q_p_sam(6)*QMAT_31(i)
-        G(i,3) = Q_p_sam(7)*QMAT_11(i) + Q_p_sam(8)*QMAT_21(i) + Q_p_sam(9)*QMAT_31(i)
-        G(i,4) = Q_p_sam(1)*QMAT_12(i) + Q_p_sam(2)*QMAT_22(i) + Q_p_sam(3)*QMAT_32(i)
-        G(i,5) = Q_p_sam(4)*QMAT_12(i) + Q_p_sam(5)*QMAT_22(i) + Q_p_sam(6)*QMAT_32(i)
-        G(i,6) = Q_p_sam(7)*QMAT_12(i) + Q_p_sam(8)*QMAT_22(i) + Q_p_sam(9)*QMAT_32(i)
-        G(i,7) = Q_p_sam(1)*QMAT_13(i) + Q_p_sam(2)*QMAT_23(i) + Q_p_sam(3)*QMAT_33(i)
-        G(i,8) = Q_p_sam(4)*QMAT_13(i) + Q_p_sam(5)*QMAT_23(i) + Q_p_sam(6)*QMAT_33(i)
-        G(i,9) = Q_p_sam(7)*QMAT_13(i) + Q_p_sam(8)*QMAT_23(i) + Q_p_sam(9)*QMAT_33(i)
-     end do
+			!function angles = GRmatmult(newpos)
 
-     where(abs(G(:,9)) == 1)
-        angles(:,1) = dacos(G(:,1))
-        angles(:,2) = dacos(G(:,9))
-        angles(:,3) = 0.
+			!angles = zeros(size(newpos,1),3);
+			!angles(:,1) = datan2(newpos(:,7),-1*newpos(:,8))
+			!angles(:,2) = dacos(newpos(:,9))
+			!angles(:,3) = datan2(newpos(:,3),newpos(:,6))
 
-        where(G(:,2) < 0)
-           angles(:,1) = twoPI - angles(:,1)
-        endwhere
-     elsewhere
-        angles(:,1) = datan2(G(:,7),-1*G(:,8))
-        angles(:,2) = dacos(G(:,9))
-        angles(:,3) = datan2(G(:,3),G(:,6))
-     endwhere
+			if(abs(G(k,9)) == 1) THEN
+				angles(k,1) = dacos(G(k,1))
+				angles(k,2) = dacos(G(k,9))
+				angles(k,3) = 0.0
 
-     where(angles(:,1) < 0)
-        angles(:,1) = angles(:,1)+ twoPI
-     endwhere
-     where(angles(:,2) < 0)
-        angles(:,2) = angles(:,2)+ twoPI
-     endwhere
-     where(angles(:,3) < 0)
-        angles(:,3) = angles(:,3)+ twoPI
-     endwhere
-     !change, start,  transfering of euler angles in radians into r,s,t
-     angles = NINT( to_deg*angles*120*m_fine/360 )
-     !change, end
+				if(G(k,2) < 0) THEN
+					angles(k,1) = twoPI - angles(k,1)
+				endif
+			else
+				angles(k,1) = datan2(G(k,7),-G(k,8))
+				angles(k,2) = dacos(G(k,9))
+				angles(k,3) = datan2(G(k,3),G(k,6))
+			endif
 
-     Phi1(:) = angles(:,1)
-     PHI(:)  = angles(:,2)
-     Phi2(:) = angles(:,3)
+			!% Make sure angles are positive
+			if(angles(k,1) < 0) THEN
+				angles(k,1) = angles(k,1) + twoPI
+			endif
+			if(angles(k,2) < 0) THEN
+				angles(k,2) = angles(k,2) + twoPI
+			endif
+			if(angles(k,3) < 0) THEN
+				angles(k,3) = angles(k,3) + twoPI
+			endif
 
-     return
-  endif
+			!change, start,  transfering of euler angles in radians into r,s,t,q
+			angles(k,:) = NINT( to_deg*angles(k,:)*120*m_fine/360 )
+			!change, end
 
-  !
-  ang = dsqrt(w21_rec**2 + w31_rec**2 + w32_rec**2)
-  where(ang == 0)
-     axis_1 = 1.d0 
-     axis_2 = 0.
-     axis_3 = 0.
-  elsewhere
-     axis_1 =  w32_rec/ang
-     axis_2 = -w31_rec/ang
-     axis_3 =  w21_rec/ang
-  endwhere
-
-  R_11 = (1.d0 - axis_1**2)*dcos(ang) + axis_1**2
-  R_12 = axis_1*axis_2*(1.d0 - dcos(ang)) + axis_3*dsin(ang)
-  R_13 = axis_1*axis_3*(1.d0 - dcos(ang)) - axis_2*dsin(ang)
-  R_21 = axis_1*axis_2*(1.d0 - dcos(ang)) - axis_3*dsin(ang)
-  R_22 = (1.d0 - axis_2**2)*dcos(ang) + axis_2**2
-  R_23 = axis_2*axis_3*(1.d0 - dcos(ang)) + axis_1*dsin(ang)
-  R_31 = axis_1*axis_3*(1.d0 - dcos(ang)) + axis_2*dsin(ang)
-  R_32 = axis_2*axis_3*(1.d0 - dcos(ang)) - axis_1*dsin(ang)
-  R_33 = (1.d0 - axis_3**2)*dcos(ang) + axis_3**2
-
-  ! ind(1,:) is the first column of "g"; Vect_Rot is transpose so that is why they have the same indices. This is realy rotation
-  do i = 1,NCRY
-     G(i,1) = R_11(i)*QMAT_11(i) + R_21(i)*QMAT_21(i) + R_31(i)*QMAT_31(i) 
-     G(i,2) = R_12(i)*QMAT_11(i) + R_22(i)*QMAT_21(i) + R_32(i)*QMAT_31(i)
-     G(i,3) = R_13(i)*QMAT_11(i) + R_23(i)*QMAT_21(i) + R_33(i)*QMAT_31(i)
-     G(i,4) = R_11(i)*QMAT_12(i) + R_21(i)*QMAT_22(i) + R_31(i)*QMAT_32(i)
-     G(i,5) = R_12(i)*QMAT_12(i) + R_22(i)*QMAT_22(i) + R_32(i)*QMAT_32(i)
-     G(i,6) = R_13(i)*QMAT_12(i) + R_23(i)*QMAT_22(i) + R_33(i)*QMAT_32(i)
-     G(i,7) = R_11(i)*QMAT_13(i) + R_21(i)*QMAT_23(i) + R_31(i)*QMAT_33(i)
-     G(i,8) = R_12(i)*QMAT_13(i) + R_22(i)*QMAT_23(i) + R_32(i)*QMAT_33(i)
-     G(i,9) = R_13(i)*QMAT_13(i) + R_23(i)*QMAT_23(i) + R_33(i)*QMAT_33(i)
-  end do
-
-  ! In the last time increment transform the texture in the sample frame
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  if (flag == n_steps) then
-
-     do i = 1,NCRY
-        GG(:) = G(i,:)
-        G(i,1) = Q_p_sam(1)*GG(1) + Q_p_sam(4)*GG(2) + Q_p_sam(7)*GG(3)
-        G(i,2) = Q_p_sam(2)*GG(1) + Q_p_sam(5)*GG(2) + Q_p_sam(8)*GG(3)
-        G(i,3) = Q_p_sam(3)*GG(1) + Q_p_sam(6)*GG(2) + Q_p_sam(9)*GG(3)
-        G(i,4) = Q_p_sam(1)*GG(4) + Q_p_sam(4)*GG(5) + Q_p_sam(7)*GG(6) 
-        G(i,5) = Q_p_sam(2)*GG(4) + Q_p_sam(5)*GG(5) + Q_p_sam(8)*GG(6)
-        G(i,6) = Q_p_sam(3)*GG(4) + Q_p_sam(6)*GG(5) + Q_p_sam(9)*GG(6)
-        G(i,7) = Q_p_sam(1)*GG(7) + Q_p_sam(4)*GG(8) + Q_p_sam(7)*GG(9)
-        G(i,8) = Q_p_sam(2)*GG(7) + Q_p_sam(5)*GG(8) + Q_p_sam(8)*GG(9)
-        G(i,9) = Q_p_sam(3)*GG(7) + Q_p_sam(6)*GG(8) + Q_p_sam(9)*GG(9)
-     end do
-
-  endif
-  !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-  !function angles = GRmatmult(newpos)
-
-  !angles = zeros(size(newpos,1),3);
-  !angles(:,1) = datan2(newpos(:,7),-1*newpos(:,8))
-  !angles(:,2) = dacos(newpos(:,9))
-  !angles(:,3) = datan2(newpos(:,3),newpos(:,6))
-
-  where(abs(G(:,9)) == 1)
-     angles(:,1) = dacos(G(:,1))
-     angles(:,2) = dacos(G(:,9))
-     angles(:,3) = 0.0
-
-     where(G(:,2) < 0)
-        angles(:,1) = twoPI - angles(:,1)
-     endwhere
-  elsewhere
-     angles(:,1) = datan2(G(:,7),-G(:,8))
-     angles(:,2) = dacos(G(:,9))
-     angles(:,3) = datan2(G(:,3),G(:,6))
-  endwhere
-
-  !% Make sure angles are positive
-  where(angles(:,1) < 0)
-     angles(:,1) = angles(:,1) + twoPI
-  endwhere
-  where(angles(:,2) < 0)
-     angles(:,2) = angles(:,2) + twoPI
-  endwhere
-  where(angles(:,3) < 0)
-     angles(:,3) = angles(:,3) + twoPI
-  endwhere
-
-    !change, start,  transfering of euler angles in radians into r,s,t,q
-    angles = NINT( to_deg*angles*120*m_fine/360 )
-    !change, end
-
-  Phi1(:) = angles(:,1)
-  PHI(:)  = angles(:,2)
-  Phi2(:) = angles(:,3)
-
+			Phi1(k) = angles(k,1)
+			PHI(k)  = angles(k,2)
+			Phi2(k) = angles(k,3)
+		ENDDO
+		!$omp enddo 
+	ENDIF
+ 
+	!$omp end parallel
   RETURN
 
 END SUBROUTINE TEXTURE
