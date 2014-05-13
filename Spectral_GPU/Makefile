@@ -20,16 +20,22 @@ F90=pgfortran
 # Variables 
 SOURCES = Variables.f90 CUDA_Kernels.f90 CUDA_Spectral.f90
 OBJECTS = $(SOURCES: .f90=.o)
-EXECUTABLE = CUDA_Spectral
 
-all: $(SOURCES) $(EXECUTABLE) 
+all: build
 
-$(EXECUTABLE): $(OBJECTS)
-	$(F90) $(FLAGS) $(FLAGS_CUDA) $(OBJECTS) -o $@
+build: Spectral_GPU
+
+OMP_Parent: $(OBJECTS)
+	$(F90) $(FLAGS) $(FLAGS_CUDA) $(OBJECTS) -o $@ 
 .f90:
-	$(F90) $(FLAGS) $(FLAGS_CUDA) $< -o $@
+	$(F90) $(FLAGS) $(FLAGS_CUDA) $< -o $@ 
+run: Spectral_GPU
+	./Spectral_GPU
+tidy:
+	@find * | egrep "#" | xargs rm -f
+	@find * | egrep "\~" | xargs rm -f	
 
 # Cleans 
 .PHONY: clean
 clean:
-	rm *.mod *.o CUDA_Spectral  
+	rm *.mod *.o Spectral_GPU
