@@ -11,11 +11,13 @@
       REAL*8 PHI1(NC), PHI(NC), PHI2(NC)
  
       CHARACTER FILENAME*200
+      CHARACTER FILENAME1*200
       CHARACTER FILENAME2*200
 
      ! call cpu_time(toti)
 	
       FILENAME2 = 'texture.txt'
+      FILENAME1 = '/home/administrator/Documents/DAN/itter_spectral_comp/OpenMP/timing.txt'
       FILENAME = 'stress.txt'
 	  
       OPEN(5, FILE='euler.inp')
@@ -29,7 +31,7 @@
 
       
 
-      CALL POLYPLMDL(FILENAME,FILENAME2,IPOINT, &
+      CALL POLYPLMDL(FILENAME,FILENAME1,FILENAME2,IPOINT, &
                        TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
                        DEFGRDYX,DEFGRDYY,DEFGRDYZ,DEFGRDZX, &
                        DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2)
@@ -40,7 +42,7 @@
       END PROGRAM POLYPL
 
 
-      SUBROUTINE POLYPLMDL(FILENAME,FILENAME2,IPOINT, &
+      SUBROUTINE POLYPLMDL(FILENAME,FILENAME1,FILENAME2,IPOINT, &
                        TEPS,DEFGRDXX,DEFGRDXY,DEFGRDXZ, &
                        DEFGRDYX,DEFGRDYY,DEFGRDYZ,DEFGRDZX, &
                        DEFGRDZY,DEFGRDZZ,PHI1,PHI,PHI2)
@@ -67,10 +69,12 @@
       
       
       CHARACTER FILENAME*200
+      CHARACTER FILENAME1*200
       CHARACTER FILENAME2*200
 
       OPEN(7, FILE=FILENAME2) 
-      OPEN(9, FILE=FILENAME)                 
+      OPEN(9, FILE=FILENAME) 
+      OPEN(10, FILE=FILENAME1, STATUS='replace')                
       
       ALLOCATE (SSYSMAT(3,3,12,NC)) 
       ALLOCATE (ELSTIF(6,6,NC))
@@ -342,7 +346,8 @@ call cpu_time(ti)
         END IF
      END DO
     
-  
+  WRITE(10,'(I6,F11.5)') NC, cpu_t5
+
   WRITE(*,'(A70)')               'Time (seconds) and Percentage Time                                '
   WRITE(*,'(A70)')               '======================================================================='
  !WRITE(*,'(A39,4X,2(1PE13.4))') 'CUDA                               ', cuda_t(1), cuda_t(1)/(totf-toti)*1.e-1_rp
@@ -361,6 +366,7 @@ call cpu_time(ti)
 
       CLOSE(7)        
       CLOSE(9)
+      CLOSE(10)
 
       
       DEALLOCATE(DEFGRDN)

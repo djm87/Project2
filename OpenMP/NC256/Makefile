@@ -33,7 +33,8 @@ OMP_Parent: $(OBJECTS)
 .f90:
 	$(F90) $(FLAGS)  $< -o $@ 
 run: OMP_Parent
-	$(EXEC) ./OMP_Parent 
+	./OMP_Parent
+	
 
 # Cleans 
 .PHONY: clean
