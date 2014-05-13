@@ -155,14 +155,14 @@ PROGRAM SCP_FCC
   CLOSE(UNIT=90)
   CLOSE(UNIT=99)
 
-  !OPEN (UNIT = 33, FILE = 'euler.txt', status='OLD')
-  !DO i = 1, NCRYS
-  !   READ(33, *) Phi1(i), PHI(i), Phi2(i)
-  !ENDDO
-  !CLOSE(33)
-    Phi1=0.0
-    PHI=0.0
-    Phi2=0.0
+  OPEN (UNIT = 33, FILE = 'euler.txt', status='OLD')
+  DO i = 1, NCRYS
+     READ(33, *) Phi1(i), PHI(i), Phi2(i)
+  ENDDO
+  CLOSE(33)
+   ! Phi1=0.0
+   ! PHI=0.0
+   ! Phi2=0.0
      !change, start, Super_set transformation according to m_fine
     Super_set_out(:,1)=Super_set_120_1
     Super_set_out(:,2)=Super_set_120_2

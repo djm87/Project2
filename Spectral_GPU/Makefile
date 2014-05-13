@@ -25,7 +25,7 @@ all: build
 
 build: Spectral_GPU
 
-OMP_Parent: $(OBJECTS)
+Spectral_GPU: $(OBJECTS)
 	$(F90) $(FLAGS) $(FLAGS_CUDA) $(OBJECTS) -o $@ 
 .f90:
 	$(F90) $(FLAGS) $(FLAGS_CUDA) $< -o $@ 
