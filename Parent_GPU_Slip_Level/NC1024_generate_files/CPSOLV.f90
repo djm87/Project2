@@ -28,10 +28,9 @@ MODULE CPSOLV
     DMAX = 0.05D0
     
 	IF(ISTEP==2) THEN
-    OPEN(101, FILE='SLPRESA2')
-	OPEN(102, FILE='C6A')
-    OPEN(103, FILE='SSYSMAT')
-	OPEN(104, FILE='C6P6A')
+	OPEN(102, FILE='/home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU_Slip_Level/Test_Initialize/C6A.txt')
+    OPEN(103, FILE='/home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU_Slip_Level/Test_Initialize/SSYSMAT.txt')
+	OPEN(104, FILE='/home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU_Slip_Level/Test_Initialize/C6P6A.txt')
 	ENDIF
 
     !$OMP PARALLEL DEFAULT(PRIVATE) &
@@ -47,7 +46,18 @@ MODULE CPSOLV
           !INITIALISE SLIP RESISTANCE AND GET CONSTANT C6P6A
 		  DO I = 1,NSLIP
 			  SLPRESA2(I,IC)= SLPRA1(I,IC)
-			  		IF(ISTEP==2) WRITE(101,'(F15.7)') SLPRESA2(I,IC)
+			  		IF(ISTEP==2)THEN
+
+						WRITE(103,'(F15.7)') SSYSMAT(1,1,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(2,2,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(3,3,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(1,1,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(2,3,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(1,3,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(2,1,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(3,2,I,IC)
+						WRITE(103,'(F15.7)') SSYSMAT(3,1,I,IC)
+					ENDIF
 			  DO II = 1,6 
 				C6P6A(II,1,I,IC) = C6A(II,I,IC)*SSYSMAT(1,1,I,IC)            
 				C6P6A(II,2,I,IC) = C6A(II,I,IC)*SSYSMAT(2,2,I,IC)
@@ -60,12 +70,7 @@ MODULE CPSOLV
 					SSYSMAT(3,1,I,IC))
 				IF(ISTEP==2)THEN
 				WRITE(102,'(F15.7)') C6A(II,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(1,1,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(2,2,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(3,3,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(1,1,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(2,3,I,IC)
-				WRITE(103,'(F15.7)') SSYSMAT(1,3,I,IC)
+
 				WRITE(104,'(F15.7)') C6P6A(II,1,I,IC)
 				WRITE(104,'(F15.7)') C6P6A(II,2,I,IC)
 				WRITE(104,'(F15.7)') C6P6A(II,3,I,IC)
@@ -83,7 +88,6 @@ MODULE CPSOLV
 	!$OMP END SINGLE
    !!START OF SOLUTION PROCEDURE
    IF(ISTEP==2)THEN
-    CLOSE(101)
 	CLOSE(102)
     CLOSE(103)
 	CLOSE(104)
