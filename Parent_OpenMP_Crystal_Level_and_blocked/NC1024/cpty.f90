@@ -17,7 +17,7 @@
      ! call cpu_time(toti)
 	
       FILENAME2 = 'texture.txt'
-      FILENAME1 = '/home/administrator/Documents/DAN/itter_spectral_comp/OpenMP/timing.txt'
+      FILENAME1 = '/home/administrator/Documents/DAN/itter_spectral_comp/Parent_OpenMP_Crystal_Level_and_blocked/timing.txt'
       FILENAME = 'stress.txt'
 	  
       OPEN(5, FILE='euler.inp')
@@ -74,7 +74,7 @@
 
       OPEN(7, FILE=FILENAME2) 
       OPEN(9, FILE=FILENAME) 
-      OPEN(10, FILE=FILENAME1, STATUS='old',ACCESS='append')                
+      OPEN(10, FILE=FILENAME1)!, STATUS='old',ACCESS='append')                
       
       ALLOCATE (SSYSMAT(3,3,12,NC)) 
       ALLOCATE (ELSTIF(6,6,NC))
