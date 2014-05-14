@@ -41,7 +41,7 @@ END Module Initialize
 program main
   use Initialize
   use cudafor
-  INTEGER, PARAMETER :: NC = 1024, NREPS = 1000
+  INTEGER, PARAMETER :: NC = 1024, NREPS = 1
   INTEGER, PARAMETER :: NSLIP = 12
 
   ! matrix data
