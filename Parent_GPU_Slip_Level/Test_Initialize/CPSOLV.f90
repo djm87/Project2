@@ -68,15 +68,9 @@ MODULE CPSOLV
 					SSYSMAT(3,2,I,IC))
 				C6P6A(II,6,I,IC) = C6A(II,I,IC)*(SSYSMAT(1,3,I,IC)+ &
 					SSYSMAT(3,1,I,IC))
-					
 				IF(ISTEP==2)THEN
-				
-				IF(I==1 .and. II==1 .and. IC=1) 
-					print *,"C6P6A = ", C6P6A(II,4,I,IC)
-					print *,"C6A = ", C6A(II,I,IC)
-				ENDIF
 				WRITE(102,'(F15.7)') C6A(II,I,IC)
-         
+
 				WRITE(104,'(F15.7)') C6P6A(II,1,I,IC)
 				WRITE(104,'(F15.7)') C6P6A(II,2,I,IC)
 				WRITE(104,'(F15.7)') C6P6A(II,3,I,IC)
