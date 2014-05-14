@@ -28,7 +28,7 @@ program SCP_FCC
   implicit none
 real :: t, t_1, t_2, t_3
   integer, PARAMETER::  NMAX = 3
-  double precision, dimension(NCRYS) ::  Phi1, PHI, Phi2, termsdim4
+  !double precision, dimension(NCRYS) ::  Phi1, PHI, Phi2, termsdim4
   INTEGER          ind_max, ind_min, ind_mid, n_steps, i, j, IMODE, III, klm, nrot !change, added klm, nrot
   DOUBLE PRECISION D_eig(3), D_unit(3), eps_dot, DT, theta, Total_Strain, sizeF(4)
   INTRINSIC        ABS, MAX
@@ -42,12 +42,12 @@ real :: t, t_1, t_2, t_3
   double precision, dimension(3,3) :: L, D_app_sa, W_app_sa, V_eig, W_app_pr, &
                                       STRESS_TENSOR_PR, STRESS_TENSOR_SA
 
-  double precision, dimension(:), ALLOCATABLE :: S11, S22, S12, S13, S23, strain
+  double precision, dimension(:), ALLOCATABLE :: S11, S22, S12, S13, S23, strain,Phi1, PHI,Phi2,termsdim4
   double precision, dimension(:,:), ALLOCATABLE :: STRESS_VEC
 
   double precision fact_1, fact_2, fact_DT, fact_dot, to_rad,to_deg, fact_s, term_s
 
-
+  ALLOCATE ( Phi1(NCRYS), PHI(NCRYS), Phi2(NCRYS), termsdim4(NCRYS))
   ii = (0.d0,1.d0)
 
   ones = 1.d0
@@ -166,6 +166,7 @@ V_eig(3,3) =   V_eig(1,1)*V_eig(2,2) - V_eig(2,1)*V_eig(1,2)
   ALLOCATE(S23(1:n_steps))
   ALLOCATE(STRESS_VEC(1:n_steps,1:6))
   ALLOCATE(strain(n_steps))
+
  !Initialize S
  S11=0
  S22=0
@@ -265,11 +266,16 @@ t_1 = t
 		 S23(j) =S23(j) + stress_23(i)*s_dot(i)
 	 ENDDO
      !$omp enddo
+
      !$omp end parallel
 	 !if (j .eq. n_steps-4) THEN 
 	 !print*,"S",S11(j),S22(j),S12(j),S13(j),S23(j)
 	 !endif
-	 
+	   call TEXTURE (Phi1, PHI, Phi2, w_12*fact_DT + W_app_pr(2,1)*DT, &
+							w_13*fact_DT + W_app_pr(3,1)*DT, &
+							w_23*fact_DT + W_app_pr(3,2)*DT, j, n_steps,NCRYS)  
+
+						
      STRESS_TENSOR_PR = RESHAPE((/S11(j), S12(j), S13(j), &
                                   S12(j), S22(j), S23(j), &
                                   S13(j), S23(j), - ( S11(j) + S22(j) )/), (/3,3/))
@@ -283,35 +289,36 @@ t_1 = t
      STRESS_VEC(j,6) = STRESS_TENSOR_SA(2,3)
     
 	
-    call TEXTURE (Phi1, PHI, Phi2, w_12*fact_DT + W_app_pr(2,1)*DT, &
-							w_13*fact_DT + W_app_pr(3,1)*DT, &
-							w_23*fact_DT + W_app_pr(3,2)*DT, j, n_steps,NCRYS)
+
 
   enddo
 
+
+ 
 		call cpu_time(t)
 t_2 = t-t_1
 
 !
   open (unit=55,file='stressSCP.dat')
-  open (unit=56,file='texture.dat')
+  open (unit=56,file='texture.dat',Status='old')
      write(55,'(7F11.5)') 0.,0.,0.,0.,0.,0.,0.
   DO I = 1,n_steps
-     write(*,'(7F11.5)') dble(i)*1.0d0/dble(n_steps),STRESS_VEC(i,:)
-     write(55,'(7F11.5)') dble(i)*1.0d0/dble(n_steps),STRESS_VEC(i,:)
+    write(*,'(7F11.5)') dble(I)*1.0d0/dble(n_steps),STRESS_VEC(I,:)
+    write(55,'(7F11.5)') dble(I)*1.0d0/dble(n_steps),STRESS_VEC(I,:)
   enddo
   close (55)
  write(56,*) 'TEXTURE AT STRAIN =    1.0000'
  write(56,*) ' 0.947   1.221   0.864 '
  write(56,*) '  90.00   90.00   90.00  '
  write(56,*) 'B   1024'
-        DO III = 1,NCRYS
+	DO III = 1,NCRYS
  	  write(56,'(4F20.5)'), Phi1(III)*360/120/m_fine, PHI(III)*360/120/m_fine, Phi2(III)*360/120/m_fine,1.0d0/dble(NCRYS)
 	END DO
+		
  close (56)
 print*, t_2
 
-  DEALLOCATE(S11,S22,S12,S13,S23, STRESS_VEC, strain)
+  DEALLOCATE(S11,S22,S12,S13,S23, STRESS_VEC, strain,Phi1,PHI,Phi2,termsdim4)
 
 end program SCP_FCC
 
@@ -340,9 +347,9 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
   angles = 0.d0
     
     
-	!$OMP PARALLEL DEFAULT(shared)
+	
 	if (flag == 0) then
-	    !$omp do
+	    !$omp parallel do DEFAULT(shared) 
 	    DO k = 1,NCRYS
 			
 			SPhi1(k) = DSIN(Phi1(k))
@@ -404,8 +411,9 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
 			PHI(k)  = angles(k,2)
 			Phi2(k) = angles(k,3)
 		ENDDO
+		!$omp end parallel do
 	else
-		!$omp do
+		!$omp parallel do DEFAULT(shared) SCHEDULE (static)
 	    DO k = 1,NCRYS
 			
 			!change, start, transferring of r,s,t into euler angles in radians
@@ -489,7 +497,10 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
 			!angles(:,1) = datan2(newpos(:,7),-1*newpos(:,8))
 			!angles(:,2) = dacos(newpos(:,9))
 			!angles(:,3) = datan2(newpos(:,3),newpos(:,6))
-
+			!if(k==6) THEN
+				!print *,"G1 = ",G(k,1), "G2= ", G(k,2), "G3= ", G(k,3),"G4 = ",G(k,4), "G5= ", G(k,5), "G6= ", G(k,6),"G7 = ",G(k,7), "G8= ", G(k,8), "G9= ", G(k,9)
+				!pause
+			!ENDIF !G is good 
 			if(abs(G(k,9)) == 1) THEN
 				angles(k,1) = dacos(G(k,1))
 				angles(k,2) = dacos(G(k,9))
@@ -514,18 +525,21 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps,NCR
 			if(angles(k,3) < 0) THEN
 				angles(k,3) = angles(k,3) + twoPI
 			endif
+			
 
 			!change, start,  transfering of euler angles in radians into r,s,t,q
 			angles(k,:) = NINT( to_deg*angles(k,:)*120*m_fine/360 )
 			!change, end
 
-			Phi1(k) = angles(k,1)
-			PHI(k)  = angles(k,2)
-			Phi2(k) = angles(k,3)
 		ENDDO
-		!$omp enddo 
+		!$omp end parallel do
+
+			Phi1 = angles(:,1)
+			PHI  = angles(:,2)
+			Phi2 = angles(:,3)
 	ENDIF
-	!$omp end parallel
+
+
   RETURN
 
 END SUBROUTINE TEXTURE
