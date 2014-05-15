@@ -11,7 +11,7 @@
 export OMP_NUM_THREADS=10	
 
 # Project folders that contain test cases
-PROJECTS ?= $(shell find PROJECTS ?= $(shell find TR1024/NC256 TR1024/NC512 TR1024/NC1024 TR1024/NC2048 TR1024/NC4096 TR1024/NC8192 TR1024/NC16384 -name Makefile) -name Makefile)
+PROJECTS = $(shell find TR1024/NC256 TR1024/NC512 TR1024/NC1024 TR1024/NC2048 TR1024/NC4096 TR1024/NC8192 TR1024/NC16384 -name Makefile)
 	
 
 %.ph_build :
@@ -21,7 +21,7 @@ PROJECTS ?= $(shell find PROJECTS ?= $(shell find TR1024/NC256 TR1024/NC512 TR10
 	+@$(MAKE) -C $(dir $*) clean $(USE_DEVICE)
 
 all:  $(addsuffix .ph_build,$(PROJECTS))
-	@echo "Finished building Spectral_GPU Cases"
+	@echo "Finished building Spectral_OMP Cases"
 
 build: $(addsuffix .ph_build,$(PROJECTS))
        
@@ -29,11 +29,11 @@ build: $(addsuffix .ph_build,$(PROJECTS))
 run: $(addsuffix .ph_build,$(PROJECTS))
 	make tidy
 	make plot 
-	@echo "Finished building Spectral_GPU Cases"
+	@echo "Finished building Spectral_OMP Cases"
 
 plot: 
 	./gnuplot.bash
-	eog Spectral_GPU_Scaling.png &
+	eog Spectral_OMP_Scaling.png &
 
 tidy:
 	@find * | egrep "#" | xargs rm -f

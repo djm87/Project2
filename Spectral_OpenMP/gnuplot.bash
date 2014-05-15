@@ -4,8 +4,8 @@
 reset
 
 # Fit data
-f(x) = m*x+b
-fit f(x) 'timing_TR1024.txt' using 1:2 via m,b
+f(x) = m*x
+fit f(x) 'timing_TR1024.txt' using 1:2 via m
 
 set terminal png
 set xlabel "Number of Crystals"

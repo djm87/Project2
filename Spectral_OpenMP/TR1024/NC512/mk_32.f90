@@ -287,7 +287,7 @@ t_2 = t-t_1
 	END DO
  close (56)
 
-  OPEN(unit=14, file='/home/administrator/Documents/DAN/itter_spectral_comp/Spectral_OpenMP/timing_TR1024.txt',ACCESS='append')
+  OPEN(unit=14, file='/home/administrator/Documents/DAN/itter_spectral_comp/Spectral_OpenMP/timing_TR1024.txt',STATUS='replace')
   write(14,'(i6,1F11.5)') NCRYS, t_2
   CLOSE(14)
   DEALLOCATE(S11,S22,S12,S13,S23, STRESS_VEC, strain)
