@@ -1,0 +1,120 @@
+Module Initialize
+CONTAINS
+!Launching a three dimensional grid of 216 theads
+attributes(global) SUBROUTINE Initialize(C6P6A,C6A,SSYSMAT,NC,NSLIP)
+
+    IMPLICIT NONE
+	INTEGER, VALUE ::	NC, NSLIP
+    REAL(8), DEVICE :: C6P6A(NSLIP,36,NC),C6A(NSLIP,6,NC),SSYSMAT(NSLIP,9,NC)
+    INTEGER :: tx,ty,tz,by,bz,IC,j
+	REAL(8), SHARED :: S_SSYS(12,9),S_C6A(12,6)
+	
+	tx = threadidx%x !will be 1-12 NSLIP
+	ty = threadidx%y !will be 1-6?
+	tz = threadidx%z !will be 1?
+	bz = blockdim%z  !will be 1
+
+	IC = (blockIdx%z-1)*bz+tz
+	
+	!Read in SSYSMAT to shared memory 
+	S_SSYS(tx,ty) = SSYSMAT(tx,ty,IC)	
+	S_SSYS(tx,7) = SSYSMAT(tx,7,IC)
+	S_SSYS(tx,8) = SSYSMAT(tx,8,IC)
+	S_SSYS(tx,9) = SSYSMAT(tx,9,IC)
+    
+
+	S_C6A(tx,ty) = C6A(tx,ty,IC)
+
+	call syncthreads()
+	C6P6A(tx,1+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,1)	
+	C6P6A(tx,2+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,2)	
+	C6P6A(tx,3+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,3)	
+	C6P6A(tx,4+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,4)+S_SSYS(tx,7)) 
+	C6P6A(tx,5+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,5)+S_SSYS(tx,8))
+	C6P6A(tx,6+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,6)+S_SSYS(tx,9))
+
+	RETURN
+
+END SUBROUTINE Initialize
+END Module Initialize
+
+program main
+  use Initialize
+  use cudafor
+  INTEGER, PARAMETER :: NC = 1024, NREPS = 1
+  INTEGER, PARAMETER :: NSLIP = 12
+
+  ! matrix data
+  REAL(8):: Atemp(N,N), btemp(N), diff
+  REAL(8), ALLOCATABLE, PINNED ::C6A(:,:,:),SSYSMAT(:,:,:), C6P6A(:,:,:), C6P6A_GPU(:,:,:)
+  REAL(8), ALLOCATABLE, DEVICE :: dC6A(:,:,:),dSSYSMAT(:,:,:), dC6P6A(:,:,:)
+  type(cudaEvent) :: start, stop
+  type(dim3) :: blocks
+  type(dim3) :: threads
+ 
+  blocks = dim3(1,1,NC)
+  threads = dim3(12,6,1) 
+
+  istat = cudaEventCreate(start)
+  istat = cudaEventCreate(stop)
+  
+  ALLOCATE(C6P6A(NSLIP,36,NC),C6P6A_GPU(NSLIP,36,NC),C6A(NSLIP,6,NC),SSYSMAT(NSLIP,9,NC)) 
+  ALLOCATE(dC6P6A(NSLIP,36,NC),dC6A(NSLIP,6,NC),dSSYSMAT(NSLIP,9,NC))
+
+  OPEN(1,FILE='C6A.txt')
+  OPEN(2,FILE='C6P6A.txt')
+  OPEN(4,FILE='SSYSMAT.txt')
+  
+  DO IC = 1,NC
+	DO I = 1,NSLIP
+		DO II = 1,9
+			READ(4,*) SSYSMAT(I,II,IC)
+
+			IF(IC==1 .and. I==1) THEN
+				!print*," ", SSYSMAT(I,II,IC)
+			ENDIF
+		ENDDO
+		DO III = 1,6 
+			READ(1,*) C6A(I,III,IC)
+		ENDDO
+		
+		DO IIII = 1,36
+			READ(2,*) C6P6A(I,IIII,IC)
+		ENDDO	
+	ENDDO
+   ENDDO
+   
+  dC6A = C6A
+  dSSYSMAT=SSYSMAT
+
+  time = 0.d0
+     call Initialize<<<blocks, threads>>>(dC6P6A,dC6A,dSSYSMAT,NC,NSLIP)
+  istat = cudaEventRecord(start, 0)
+  do j = 1, NREPS
+     call Initialize<<<blocks, threads>>>(dC6P6A,dC6A,dSSYSMAT,NC,NSLIP)
+  end do
+  istat = cudaEventRecord(stop, 0)    
+  istat = cudaDeviceSynchronize()
+  istat = cudaEventElapsedTime(time, start, stop)
+  time = time / 1.0d3
+  print*,"time = ", time, "NREPS = ", NREPS
+
+  C6P6A_GPU =dC6P6A
+  DO IC = 1,NC
+	DO I = 1,NSLIP
+		DO II = 1,36
+			diff = C6P6A_GPU(I,II,IC)-C6P6A(I,II,IC)
+			IF(diff > 0.005) THEN 
+				print*, "Incorrect C6P6A", diff, "(",I,II,IC,")"
+				pause
+			ENDIF
+		ENDDO
+	ENDDO
+ENDDO
+  gflops = 6.d0*9.d0*REAL(NSLIP)*REAL(NC)*REAL(NREPS)/time/1d9 !Losely written as the number add/multiplications
+  write (*,901) gflops
+  901 format(f10.3,' GFlops/s')
+  
+  DEALLOCATE(C6P6A,C6A,SSYSMAT,C6P6A_GPU) 
+  DEALLOCATE(dC6P6A,dC6A,dSSYSMAT)
+end program
