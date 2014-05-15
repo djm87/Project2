@@ -10,12 +10,12 @@ attributes(global) SUBROUTINE Section2_1_ITTR0(SLPRESA2,STRESS2BE,DRFCE2,SSYSMAT
 		DG2(NSLIP,NC)
 		
     INTEGER :: tx,ty,by,IC,j
-	REAL(8), SHARED :: S_SSYS(12,9),S_STRESS2BE(6),S_DRFCE2(12), &
-		S_ABSDG(12),S_SLIPSIGN(12),EXPN,DGDO
-	
+	REAL(8), SHARED :: S_SSYS(12,9,8),S_STRESS2BE(6,8),S_DRFCE2(12,8), &
+		S_ABSDG(12,8),S_SLIPSIGN(12,8),EXPN,DGDO
+
 	tx = threadidx%x !will be 1-12 NSLIP
-	ty = threadidx%y !will be 16?
-	by = blockdim%y  !will be ?
+	ty = threadidx%y !will be 4?
+	by = blockdim%y  !will be 4?
    
 	IC = (blockIdx%y-1)*by+ty
 	
@@ -26,27 +26,27 @@ attributes(global) SUBROUTINE Section2_1_ITTR0(SLPRESA2,STRESS2BE,DRFCE2,SSYSMAT
 	!====================
 	
 	DO j =1,9
-		S_SSYS(tx,j) = SSYSMAT(tx,j,IC)	
+		S_SSYS(tx,j,ty) = SSYSMAT(tx,j,IC)	
 	ENDDO
 	
 	DO j =1,6
-		S_STRESS2BE(j) = STRESS2BE(j,IC)	
+		S_STRESS2BE(j,ty) = STRESS2BE(j,IC)	
 	ENDDO
 	
 	call syncthreads()
 	
-	S_DRFCE2(tx) = 0.0D0 
-	S_DRFCE2(tx) = S_DRFCE2(tx)+S_STRESS2BE(1)*S_SSYS(tx,1)&
-				+S_STRESS2BE(2)*S_SSYS(tx,2)&
-				+S_STRESS2BE(3)*S_SSYS(tx,3)&
-				+S_STRESS2BE(4)*(S_SSYS(tx,4)+S_SSYS(tx,7))&
-				+S_STRESS2BE(5)*(S_SSYS(tx,5)+S_SSYS(tx,8))&
-				+S_STRESS2BE(6)*(S_SSYS(tx,6)+S_SSYS(tx,9))
+	S_DRFCE2(tx,ty) = 0.0D0 
+	S_DRFCE2(tx,ty) = S_DRFCE2(tx,ty)+S_STRESS2BE(1,ty)*S_SSYS(tx,1,ty)&
+				+S_STRESS2BE(2,ty)*S_SSYS(tx,2,ty)&
+				+S_STRESS2BE(3,ty)*S_SSYS(tx,3,ty)&
+				+S_STRESS2BE(4,ty)*(S_SSYS(tx,4,ty)+S_SSYS(tx,7,ty))&
+				+S_STRESS2BE(5,ty)*(S_SSYS(tx,5,ty)+S_SSYS(tx,8,ty))&
+				+S_STRESS2BE(6,ty)*(S_SSYS(tx,6,ty)+S_SSYS(tx,9,ty))
 	
-	S_SLIPSIGN(tx) = SIGN(1.0D0,S_DRFCE2(tx))
-	DG2(tx,IC) = S_SLIPSIGN(tx)*DGDO*DABS(S_DRFCE2(tx)/SLPRESA2(tx,IC))**EXPN
+	S_SLIPSIGN(tx,ty) = SIGN(1.0D0,S_DRFCE2(tx,ty))
+	DG2(tx,IC) = S_SLIPSIGN(tx,ty)*DGDO*DABS(S_DRFCE2(tx,ty)/SLPRESA2(tx,IC))**EXPN
 	 
-	DRFCE2(tx,IC)=S_DRFCE2(tx)
+	DRFCE2(tx,IC)=S_DRFCE2(tx,ty)
 
 	RETURN
 
@@ -56,8 +56,9 @@ END Module Section2
 program main
 	use Section2
 	use cudafor
-	INTEGER, PARAMETER :: NC = 1024, NREPS = 1000
+	INTEGER, PARAMETER :: NC = 1024, NREPS = 20000 
 	INTEGER, PARAMETER :: NSLIP = 12
+
 
 	! matrix data
 	REAL(8):: Atemp(N,N), btemp(N), diff
@@ -67,8 +68,8 @@ program main
 	type(dim3) :: blocks
 	type(dim3) :: threads
 
-	blocks = dim3(1,NC,1)
-	threads = dim3(12,1,1) 
+	blocks = dim3(1,NC/8,1)
+	threads = dim3(12,8,1) 
 
 	istat = cudaEventCreate(start)
 	istat = cudaEventCreate(stop)
@@ -81,7 +82,7 @@ program main
 	OPEN(3,FILE='SSYSMAT.txt')
 	OPEN(4,FILE='DRFCE2.txt')
   
-  
+
 	DO IC = 1,NC
 		DO I = 1,NSLIP
 			DO II = 1,9
@@ -134,7 +135,7 @@ program main
 			ENDIF
 		ENDDO
 	ENDDO
-	gflops = 6.d0*9.d0*REAL(NSLIP)*REAL(NC)*REAL(NREPS)/time/1d9 !Losely written as the number add/multiplications
+	gflops = 19.d0*REAL(NSLIP)*REAL(NC)*REAL(NREPS)/time/1d9 !Losely written as the number add/multiplications
 	write (*,901) gflops
 	901 format(f10.3,' GFlops/s')
 
