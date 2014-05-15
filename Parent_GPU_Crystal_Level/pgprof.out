@@ -1,0 +1,958 @@
+PROF NODALL 0 CUDA_Parent 1400074752 1400073824
+h Mech-1 7311 0 1 0.000000
+I 6 GenuineIntel nehalem-64 linux86-64 4 3 2661
+t 1 1926
+E 1 Seconds
+<accelinfo>
+  <head>
+      <item>
+        <label>CUDA Driver Version</label>
+        <value>5000</value>
+      </item>
+      <item>
+        <label>NVRM version</label>
+        <value>NVIDIA UNIX x86_64 Kernel Module  304.88  Wed Mar 27 14:26:46 PDT 2013</value>
+      </item>
+  </head>
+  <body>
+    <device>
+      <item>
+        <label>Device Number</label>
+        <value>0</value>
+      </item>
+      <item>
+        <label>Device Name</label>
+        <value>Tesla K20c</value>
+      </item>
+      <item>
+        <label>Device Revision Number</label>
+        <value>3.5</value>
+      </item>
+      <item>
+        <label>Global Memory Size</label>
+        <value>5032706048</value>
+      </item>
+      <item>
+        <label>Number of Multiprocessors</label>
+        <value>13</value>
+      </item>
+      <item>
+        <label>Number of SP Cores</label>
+        <value>2496</value>
+      </item>
+      <item>
+        <label>Number of DP Cores</label>
+        <value>832</value>
+      </item>
+      <item>
+        <label>Concurrent Copy and Execution</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Total Constant Memory</label>
+        <value>65536</value>
+      </item>
+      <item>
+        <label>Total Shared Memory per Block</label>
+        <value>49152</value>
+      </item>
+      <item>
+        <label>Registers per Block</label>
+        <value>65536</value>
+      </item>
+      <item>
+        <label>Warp Size</label>
+        <value>32</value>
+      </item>
+      <item>
+        <label>Maximum Threads per Block</label>
+        <value>1024</value>
+      </item>
+      <item>
+        <label>Maximum Block Dimensions</label>
+        <value>1024, 1024, 64</value>
+      </item>
+      <item>
+        <label>Maximum Grid Dimensions</label>
+        <value>2147483647 x 65535 x 65535</value>
+      </item>
+      <item>
+        <label>Maximum Memory Pitch</label>
+        <value>2147483647B</value>
+      </item>
+      <item>
+        <label>Texture Alignment</label>
+        <value>512B</value>
+      </item>
+      <item>
+        <label>Clock Rate</label>
+        <value>705 MHz</value>
+      </item>
+      <item>
+        <label>Execution Timeout</label>
+        <value>No</value>
+      </item>
+      <item>
+        <label>Integrated Device</label>
+        <value>No</value>
+      </item>
+      <item>
+        <label>Can Map Host Memory</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Compute Mode</label>
+        <value>default</value>
+      </item>
+      <item>
+        <label>Concurrent Kernels</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>ECC Enabled</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Memory Clock Rate</label>
+        <value>2600 MHz</value>
+      </item>
+      <item>
+        <label>Memory Bus Width</label>
+        <value>320 bits</value>
+      </item>
+      <item>
+        <label>L2 Cache Size</label>
+        <value>1310720 bytes</value>
+      </item>
+      <item>
+        <label>Max Threads Per SMP</label>
+        <value>2048</value>
+      </item>
+      <item>
+        <label>Async Engines</label>
+        <value>2</value>
+      </item>
+      <item>
+        <label>Unified Addressing</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>PGI Compiler Option</label>
+        <value>-ta=nvidia,cc35</value>
+      </item>
+    </device>
+    <device>
+      <item>
+        <label>Device Number</label>
+        <value>1</value>
+      </item>
+      <item>
+        <label>Device Name</label>
+        <value>Quadro 4000</value>
+      </item>
+      <item>
+        <label>Device Revision Number</label>
+        <value>2.0</value>
+      </item>
+      <item>
+        <label>Global Memory Size</label>
+        <value>2146631680</value>
+      </item>
+      <item>
+        <label>Number of Multiprocessors</label>
+        <value>8</value>
+      </item>
+      <item>
+        <label>Number of Cores</label>
+        <value>256</value>
+      </item>
+      <item>
+        <label>Concurrent Copy and Execution</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Total Constant Memory</label>
+        <value>65536</value>
+      </item>
+      <item>
+        <label>Total Shared Memory per Block</label>
+        <value>49152</value>
+      </item>
+      <item>
+        <label>Registers per Block</label>
+        <value>32768</value>
+      </item>
+      <item>
+        <label>Warp Size</label>
+        <value>32</value>
+      </item>
+      <item>
+        <label>Maximum Threads per Block</label>
+        <value>1024</value>
+      </item>
+      <item>
+        <label>Maximum Block Dimensions</label>
+        <value>1024, 1024, 64</value>
+      </item>
+      <item>
+        <label>Maximum Grid Dimensions</label>
+        <value>65535 x 65535 x 65535</value>
+      </item>
+      <item>
+        <label>Maximum Memory Pitch</label>
+        <value>2147483647B</value>
+      </item>
+      <item>
+        <label>Texture Alignment</label>
+        <value>512B</value>
+      </item>
+      <item>
+        <label>Clock Rate</label>
+        <value>950 MHz</value>
+      </item>
+      <item>
+        <label>Execution Timeout</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Integrated Device</label>
+        <value>No</value>
+      </item>
+      <item>
+        <label>Can Map Host Memory</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>Compute Mode</label>
+        <value>default</value>
+      </item>
+      <item>
+        <label>Concurrent Kernels</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>ECC Enabled</label>
+        <value>No</value>
+      </item>
+      <item>
+        <label>Memory Clock Rate</label>
+        <value>1404 MHz</value>
+      </item>
+      <item>
+        <label>Memory Bus Width</label>
+        <value>256 bits</value>
+      </item>
+      <item>
+        <label>L2 Cache Size</label>
+        <value>524288 bytes</value>
+      </item>
+      <item>
+        <label>Max Threads Per SMP</label>
+        <value>1536</value>
+      </item>
+      <item>
+        <label>Async Engines</label>
+        <value>2</value>
+      </item>
+      <item>
+        <label>Unified Addressing</label>
+        <value>Yes</value>
+      </item>
+      <item>
+        <label>PGI Compiler Option</label>
+        <value>-ta=nvidia,cc20</value>
+      </item>
+    </device>
+  </body>
+</accelinfo>
+p 0
+<accelperf>
+<hostname>Mech-1</hostname>
+<pid>7311</pid>
+<descriptors>
+<desc tag="2">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>CUDA Kernel Call Count</event_name>
+</desc>
+<desc tag="3">
+<type>double</type>
+<primary_metric>true</primary_metric>
+<event_name>CUDA GPU Secs</event_name>
+<units>seconds</units>
+</desc>
+<desc tag="4">
+<type>double</type>
+<primary_metric>true</primary_metric>
+<event_name>CUDA CPU Secs</event_name>
+<units>seconds</units>
+</desc>
+<desc tag="5">
+<type>string</type>
+<primary_metric>false</primary_metric>
+<event_name>Grid Size</event_name>
+</desc>
+<desc tag="7">
+<type>string</type>
+<primary_metric>false</primary_metric>
+<event_name>Thread Block Size</event_name>
+</desc>
+<desc tag="10">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Avg Regs/Thread</event_name>
+</desc>
+<desc tag="11">
+<type>double</type>
+<primary_metric>false</primary_metric>
+<event_name>Avg Occupancy</event_name>
+</desc>
+<desc tag="15">
+<type>double</type>
+<primary_metric>false</primary_metric>
+<event_name>Tot MByte</event_name>
+<units>megabytes</units>
+</desc>
+<desc tag="20">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Global L1 Load Hits</event_name>
+</desc>
+<desc tag="21">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Global L1 Load Misses</event_name>
+</desc>
+<desc tag="22">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Global Loads</event_name>
+</desc>
+<desc tag="23">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Global Stores</event_name>
+</desc>
+<desc tag="51">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Avg Dyn Shmem/Block</event_name>
+</desc>
+<desc tag="52">
+<type>long</type>
+<primary_metric>false</primary_metric>
+<event_name>Avg Static Shmem/Block</event_name>
+</desc>
+</descriptors>
+<perfdata>
+<thread>
+<threadid>0</threadid>
+<srcfile>
+<pathname>(unknown)</pathname>
+<routine>
+<name>[Data_Transfer_to_Device]</name>
+<startline>0</startline>
+<linecount>0</linecount>
+<device>
+<number>0</number>
+<region>
+<operation>
+<line>0</line>
+<data tag="2">
+<total>3000</total>
+</data>
+<data tag="3">
+<total>0.376623</total>
+</data>
+<data tag="4">
+<total>0.447349</total>
+</data>
+<data tag="5">
+<total>N/A</total>
+</data>
+<data tag="7">
+<total>N/A</total>
+</data>
+<data tag="10">
+<total>0</total>
+</data>
+<data tag="11">
+<total>0.000000</total>
+</data>
+<data tag="15">
+<total>1453.125000</total>
+</data>
+<data tag="20">
+<total>0</total>
+</data>
+<data tag="21">
+<total>0</total>
+</data>
+<data tag="22">
+<total>0</total>
+</data>
+<data tag="23">
+<total>0</total>
+</data>
+<data tag="51">
+<total>0</total>
+</data>
+<data tag="52">
+<total>0</total>
+</data>
+</operation>
+</region>
+</device>
+</routine>
+</srcfile>
+<srcfile>
+<pathname>(unknown)</pathname>
+<routine>
+<name>cuda_kernels_cpsolv_</name>
+<startline>0</startline>
+<linecount>0</linecount>
+<device>
+<number>0</number>
+<region>
+<operation>
+<line>0</line>
+<data tag="2">
+<total>1000</total>
+</data>
+<data tag="3">
+<total>25.636037</total>
+</data>
+<data tag="4">
+<total>25.662646</total>
+</data>
+<data tag="5">
+<total>4x1</total>
+</data>
+<data tag="7">
+<total>256x1x1</total>
+</data>
+<data tag="10">
+<total>136</total>
+</data>
+<data tag="11">
+<total>0.125000</total>
+</data>
+<data tag="15">
+<total>0</total>
+</data>
+<data tag="20">
+<total>0</total>
+</data>
+<data tag="21">
+<total>0</total>
+</data>
+<data tag="22">
+<total>25378413</total>
+</data>
+<data tag="23">
+<total>3765378</total>
+</data>
+<data tag="51">
+<total>0</total>
+</data>
+<data tag="52">
+<total>0</total>
+</data>
+</operation>
+</region>
+</device>
+</routine>
+</srcfile>
+<srcfile>
+<pathname>(unknown)</pathname>
+<routine>
+<name>[Data_Transfer_to_Host]</name>
+<startline>0</startline>
+<linecount>0</linecount>
+<device>
+<number>0</number>
+<region>
+<operation>
+<line>0</line>
+<data tag="2">
+<total>2000</total>
+</data>
+<data tag="3">
+<total>0.030980</total>
+</data>
+<data tag="4">
+<total>0.065070</total>
+</data>
+<data tag="5">
+<total>N/A</total>
+</data>
+<data tag="7">
+<total>N/A</total>
+</data>
+<data tag="10">
+<total>0</total>
+</data>
+<data tag="11">
+<total>0.000000</total>
+</data>
+<data tag="15">
+<total>140.625000</total>
+</data>
+<data tag="20">
+<total>0</total>
+</data>
+<data tag="21">
+<total>0</total>
+</data>
+<data tag="22">
+<total>0</total>
+</data>
+<data tag="23">
+<total>0</total>
+</data>
+<data tag="51">
+<total>0</total>
+</data>
+<data tag="52">
+<total>0</total>
+</data>
+</operation>
+</region>
+</device>
+</routine>
+</srcfile>
+</thread>
+</perfdata>
+</accelperf>
+f <unknown>
+r [System_Time] 0 0 0 0 0 0 0
+e 1.94845
+f /home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU/cpty.f90
+r polyplmdl 345 42 0 0 0 403f40 2ce0
+e 0.71134
+l 84 0 0 0 0 4040a7
+l 92 0 0 0 0 404b3b
+l 131 0 0 0 0 404bd0
+l 140 0 0 0 0 404bf5
+l 152 0 0 0 0 404c80
+l 153 0 0 0 0 404c89
+l 162 0 0 0 0 404cd1
+l 185 0 0 0 0 404df9
+e 0.0412371
+a 404f7e 0
+e 0.0206186
+a 40508e 0
+e 0.0103093
+a 4050fa 0
+e 0.0103093
+l 219 0 0 0 0 405240
+e 0.659794
+a 405240 0
+e 0.0103093
+a 40526b 0
+e 0.0206186
+a 40527c 0
+e 0.0103093
+a 405310 0
+e 0.0103093
+a 40533a 0
+e 0.0206186
+a 405360 0
+e 0.0103093
+a 40537b 0
+e 0.0515464
+a 405397 0
+e 0.0206186
+a 4053dc 0
+e 0.0206186
+a 4053fc 0
+e 0.0206186
+a 40540e 0
+e 0.0103093
+a 40544f 0
+e 0.0103093
+a 40546c 0
+e 0.0103093
+a 40549d 0
+e 0.0309278
+a 4054aa 0
+e 0.0206186
+a 4054d0 0
+e 0.0103093
+a 4054ef 0
+e 0.0103093
+a 40552a 0
+e 0.0515464
+a 40554c 0
+e 0.0206186
+a 40555e 0
+e 0.0103093
+a 40556e 0
+e 0.0206186
+a 40557c 0
+e 0.0309278
+a 405590 0
+e 0.0309278
+a 405610 0
+e 0.0103093
+a 40562e 0
+e 0.0103093
+a 40563f 0
+e 0.0206186
+a 405680 0
+e 0.0206186
+a 4056ab 0
+e 0.0309278
+a 4056c0 0
+e 0.0103093
+a 4056ca 0
+e 0.0103093
+a 4056df 0
+e 0.0103093
+a 4056ef 0
+e 0.0721649
+l 253 0 0 0 0 405713
+l 276 0 0 0 0 4058c7
+l 294 0 0 0 0 405a18
+e 0.0103093
+a 405b1a 0
+e 0.0103093
+l 320 0 0 0 0 405b68
+l 323 0 0 0 0 405b84
+l 329 0 0 0 0 405c70
+l 332 0 0 0 0 405d87
+l 333 0 0 0 0 405d87
+l 343 0 0 0 0 405e88
+l 346 0 0 0 0 405f71
+l 347 0 0 0 0 405f8c
+l 383 0 0 0 0 4068f7
+r matmatmlt 74 738 0 0 0 40d5b0 4da
+e 0.371134
+l 743 0 0 0 0 40d5b4
+e 0.0412371
+a 40d5b4 0
+e 0.0412371
+l 744 0 0 0 0 40d5bd
+e 0.28866
+a 40d5cd 0
+e 0.0103093
+a 40d5de 0
+e 0.0103093
+a 40d5ee 0
+e 0.0206186
+a 40d600 0
+e 0.0103093
+a 40d60f 0
+e 0.0103093
+a 40d61d 0
+e 0.0206186
+a 40d62e 0
+e 0.0103093
+a 40d64f 0
+e 0.0103093
+a 40d66e 0
+e 0.0103093
+a 40d68e 0
+e 0.0103093
+a 40d69c 0
+e 0.0103093
+a 40d6af 0
+e 0.0206186
+a 40d6bd 0
+e 0.0206186
+a 40d6e0 0
+e 0.0309278
+a 40d70c 0
+e 0.0103093
+a 40d71e 0
+e 0.0515464
+a 40d730 0
+e 0.0103093
+a 40d73e 0
+e 0.0103093
+l 762 0 0 0 0 40d750
+l 766 0 0 0 0 40d759
+e 0.0206186
+a 40d79c 0
+e 0.0103093
+a 40d7af 0
+e 0.0103093
+l 784 0 0 0 0 40d8ec
+e 0.0103093
+a 40d8ef 0
+e 0.0103093
+l 787 0 0 0 0 40d8f5
+e 0.0103093
+a 40d98c 0
+e 0.0103093
+l 805 0 0 0 0 40da87
+r defpiupd 125 912 0 0 0 40f830 c67
+e 0.298969
+l 926 0 0 0 0 40f854
+l 935 0 0 0 0 40f8da
+e 0.0824742
+a 40fc2f 0
+e 0.0206186
+a 40fcfc 0
+e 0.0103093
+a 40fd1d 0
+e 0.0206186
+a 40fd6d 0
+e 0.0103093
+a 40ff5a 0
+e 0.0103093
+a 40ffdf 0
+e 0.0103093
+l 968 0 0 0 0 410056
+l 969 0 0 0 0 4100da
+e 0.0103093
+a 4100df 0
+e 0.0103093
+l 972 0 0 0 0 4100ed
+e 0.103093
+a 4100fa 0
+e 0.0103093
+a 41010e 0
+e 0.0206186
+a 41011a 0
+e 0.0206186
+a 41013e 0
+e 0.0103093
+a 41016e 0
+e 0.0206186
+a 41018e 0
+e 0.0206186
+l 981 0 0 0 0 4101b0
+l 1033 0 0 0 0 410266
+e 0.103093
+a 4102e0 0
+e 0.0103093
+a 41032f 0
+e 0.0103093
+a 41039e 0
+e 0.0103093
+a 4103c0 0
+e 0.0103093
+a 4103cc 0
+e 0.0103093
+a 41040d 0
+e 0.0103093
+a 41041e 0
+e 0.0206186
+a 41044d 0
+e 0.0103093
+a 410490 0
+e 0.0103093
+f <unknown>
+r pghpf_idate 0 0 0 0 0 42eeb0 80
+e 0.0103093
+a 42ef2e 0
+e 0.0103093
+f <unknown>
+r __hpf_second 0 0 0 0 0 443ad0 70
+e 0.0206186
+a 443b0b 0
+e 0.0103093
+a 443b1b 0
+e 0.0103093
+f <unknown>
+r cvtp_cp 0 0 0 0 0 44b7b0 80
+e 0.0103093
+a 44b7ed 0
+e 0.0103093
+f <unknown>
+r __hpfio_fcvt 0 0 0 0 0 44d090 18c0
+e 0.0103093
+a 44d0f0 0
+e 0.0103093
+f <unknown>
+r __fvspow_gh 0 0 0 0 0 48eec0 0
+e 0.0103093
+f <unknown>
+r __fsd_exp_long 0 0 0 0 0 49e950 150
+e 0.0515464
+a 49e95c 0
+e 0.0103093
+a 49e980 0
+e 0.0103093
+a 49e9de 0
+e 0.0103093
+a 49e9ee 0
+e 0.0103093
+a 49ea0e 0
+e 0.0103093
+f <unknown>
+r __fsd_log_long 0 0 0 0 0 49eaa0 270
+e 0.0103093
+a 49ec6f 0
+e 0.0103093
+o /opt/pgi/linux86-64/2013/cuda/5.0/lib64/libcudart.so.5.0
+f <unknown>
+r cudaGetExportTable 0 0 0 0 0 6b90 1f6e0
+e 0.0103093
+a e1d0 0
+e 0.0103093
+o /usr/lib/nvidia-304/libcuda.so.1
+f <unknown>
+r cuFuncSetBlockShape 0 0 0 0 0 c9850 2b0
+e 0.0103093
+a c9ace 0
+e 0.0103093
+f <unknown>
+r cuVDPAUGetDevice 0 0 0 0 0 dc4c0 b130
+e 0.0103093
+a e5aca 0
+e 0.0103093
+f <unknown>
+r cuMemGetAttribute_v2 0 0 0 0 0 e7cf0 13ff80
+e 14.6804
+a e89cf 0
+e 0.0103093
+a f374c 0
+e 0.154639
+a f37cf 0
+e 0.0824742
+a f384f 0
+e 0.0515464
+a f804d 0
+e 0.298969
+a f8450 0
+e 0.206186
+a f84cf 0
+e 0.0824742
+a 1bf5cd 0
+e 8.8866
+a 1bffca 0
+e 0.0103093
+a 1cbacf 0
+e 0.0103093
+a 1cd2d0 0
+e 0.175258
+a 1cd4cf 0
+e 0.206186
+a 1cd550 0
+e 0.43299
+a 1cd5cb 0
+e 0.0309278
+a 1cf550 0
+e 0.0103093
+a 1cf64c 0
+e 0.134021
+a 1cf6cf 0
+e 1.05155
+a 1cf750 0
+e 0.350515
+a 1d29cf 0
+e 0.175258
+a 1d2a4e 0
+e 0.195876
+a 1d2acd 0
+e 0.278351
+a 1d2b4e 0
+e 0.0515464
+a 1d2bcd 0
+e 0.0515464
+a 1d2c50 0
+e 0.0618557
+a 1d2fd0 0
+e 0.474227
+a 1d3050 0
+e 0.14433
+a 1d30cf 0
+e 0.123711
+a 1d3150 0
+e 0.216495
+a 1d31cf 0
+e 0.0103093
+a 1d32d0 0
+e 0.381443
+a 1d38cf 0
+e 0.103093
+a 1e0950 0
+e 0.154639
+a 202a4f 0
+e 0.0103093
+a 20354d 0
+e 0.0103093
+a 21eecc 0
+e 0.0103093
+a 2233d0 0
+e 0.0103093
+a 227c50 0
+e 0.0309278
+f <unknown>
+r cudbgMain 0 0 0 0 0 22ca60 e000
+e 6.15464
+a 231bd0 0
+e 0.0103093
+a 23804a 0
+e 3.82474
+a 2380d0 0
+e 2.31959
+o /lib/x86_64-linux-gnu/libpthread.so.0
+f <unknown>
+r pthread_timedjoin_np 0 0 0 0 0 9280 160
+e 0.0618557
+a 93df 0
+e 0.0618557
+f <unknown>
+r __pthread_mutex_lock_internal 0 0 0 0 0 9e80 0
+e 0.0721649
+f <unknown>
+r _L_lock_858 0 0 0 0 0 a056 1b
+e 0.0103093
+a a056 0
+e 0.0103093
+f <unknown>
+r __pthread_mutex_unlock_usercnt 0 0 0 0 0 af70 c0
+e 0.0721649
+a b024 0
+e 0.0721649
+f <unknown>
+r _L_unlock_544 0 0 0 0 0 b0da 1b
+e 0.0515464
+a b0da 0
+e 0.0515464
+o /lib/x86_64-linux-gnu/libc.so.6
+f <unknown>
+r sigset 0 0 0 0 0 379d0 1ff0
+e 0.0103093
+a 38300 0
+e 0.0103093
+f <unknown>
+r vprintf 0 0 0 0 0 4e3a0 1c0
+e 0.0103093
+a 4e400 0
+e 0.0103093
+f <unknown>
+r __printf_fp 0 0 0 0 0 4e560 2850
+e 0.0206186
+a 4ec9f 0
+e 0.0103093
+a 4f23c 0
+e 0.0103093
+f <unknown>
+r fputc 0 0 0 0 0 72320 150
+e 0.0206186
+a 72320 0
+e 0.0103093
+a 723c0 0
+e 0.0103093
+f <unknown>
+r memset 0 0 0 0 0 8bc20 b50
+e 0.0206186
+a 8bca0 0
+e 0.0103093
+a 8c020 0
+e 0.0103093
+f <unknown>
+r access 0 0 0 0 0 e7090 30
+e 0.0721649
+a e7090 0
+e 0.0721649
+f <unknown>
+r sstk 0 0 0 0 0 ecc40 20
+e 2.60825
+a ecc5f 0
+e 2.60825
+z

@@ -1,0 +1,127 @@
+!
+!      Copyright 2013, STMicroelectronics, Incorporated.
+!      All rights reserved.
+!
+!          This source code is intended only as a supplement to
+!   STMicroelectronics Development Tools and/or on-line documentation.
+!
+
+MODULE faster_dgemm
+
+CONTAINS
+  attributes(global) subroutine dgemm16(a, b, c, m, n, k)
+    use cublas_device
+    integer, value :: m, n, k
+    double precision, device :: a(m,*), b(k,*), c(m,*)
+    double precision, device :: alpha, beta
+    type(cublasHandle) :: ch1
+    integer transa, transb
+    i = threadIdx%x
+    if (i.eq.1) then
+        istat = cublasCreate_v2(ch1)
+        alpha = 1.0d0
+        beta  = 0.0d0
+        transa = cublas_op_n
+        transb = cublas_op_n
+        istat = cublasDgemm_v2(ch1, transa, transb, m, n, k, alpha, &
+                                   a, m, b, k, beta, c, m)
+        istat = cublasDestroy_v2(ch1)
+    end if
+    return
+    end subroutine
+
+END MODULE
+
+program main
+  use cudafor
+  use faster_dgemm
+  integer, parameter :: N = 512
+  integer, parameter :: NREPS = 100
+  ! matrix data
+  real(8), dimension(N,N) :: A, B, C
+  real(8), allocatable, device, dimension(:,:) :: dA, dB, dC
+  real(8) gold, RR(N), RQ(N)
+  type(cudaEvent) :: start, stop
+  type(dim3) :: blocks
+  type(dim3) :: threads
+
+  istat = cudaEventCreate(start)
+  istat = cudaEventCreate(stop)
+
+  j = 1
+  bv = -127.0d0
+  do i = 1, N/2
+    B(i,j) = 2.0d0 ** bv
+    bv = bv + 1.0d0
+    B(N-i+1,j) = -B(i,j)
+  end do
+
+  call random_number(rr)
+  A(:,1) = rr
+
+  do j = 2, N
+    RQ = B(:,1)
+    call random_number(rr)
+    nn = N - 1
+    do i = 1, N
+      ival = int(rr(j) * nn + 1.0d0)
+      B(i,j) = rq(ival)
+      do k = ival, nn
+        rq(k) = rq(k+1)
+      end do
+      nn = nn - 1
+      A(i,j) = A(i,1)
+    end do
+  end do
+
+  allocate(dA(N,N))
+  allocate(dB(N,N))
+  allocate(dC(N,N))
+
+  dA = A
+  dB = B
+
+  m = N
+  k = N
+
+  ! timing experiment
+  call dgemm16<<<1, 1>>>(dA, dB, dC, m, N, k)
+  time = 0.d0
+  istat = cudaEventRecord(start, 0)
+  do j = 1, NREPS
+     call dgemm16<<<1, 1>>>(dA, dB, dC, m, N, k)
+  end do
+  istat = cudaEventRecord(stop, 0)
+  istat = cudaDeviceSynchronize()
+  istat = cudaEventElapsedTime(time, start, stop)
+  time = time / (NREPS*1.0d3)
+
+  C = dC
+
+  nerrors = 0
+  rmaxerr = 0.0d0
+  rsumerr = 0.0d0
+  do j = 1, N
+    do i = 1, N
+      if (C(i,j) .ne. 0.0d0) then
+        if (abs(C(i,j)) .gt. rmaxerr) rmaxerr = abs(C(i,j))
+        nerrors = nerrors + 1
+        rsumerr = rsumerr + abs(C(i,j))
+      end if
+    end do
+  end do
+
+  if (nerrors .eq. 0) then
+    print *,"Test passed!"
+  else
+    print *,nerrors," errors were encountered"
+    print *,"Max error was ",rmaxerr
+    print *,"Ave error was ",rsumerr / (N * N)
+  endif
+
+  gflops = 2.0 * N * N * N/time/1d9
+  write (*,901) m,k,k,N,time*1.0d3,gflops
+  print *,"### C(1,1)=",C(1,1)
+!
+901 format(i0,'x',i0,' * ',i0,'x',i0,':\t',f8.3,' ms\t',f8.3,' GFlops/s')
+end program

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<session version="1" name="GPU_Profile_1_ITTER0" hscale="3.883258641504297E-6">
+<executable file="/home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU_Slip_Level/Test_Section2/test" profileonstart="true" concurrentkernels="true"><envs></envs></executable>
+<expert><columnprops></columnprops>
+</expert>
+<analysis activescope="APPLICATION"><visitedstages><stage name="KERNEL_MEMORY"/><stage name="KERNEL_INSTRUCTION"/><stage name="MULTIPROCESSOR"/><stage name="TIMELINE"/></visitedstages></analysis>
+<vruler width="200"/>
+<hruler>
+</hruler>
+<timelinestate>
+<timeline pathname="30557" kind="PROCESS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="30557/-2141251776" kind="THREAD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="30557/-2141251776/Runtime API" kind="RUNTIME" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="30557/-2141251776/Driver API" kind="DRIVER" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="30557/Profiling Overhead" kind="OVERHEADS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c" kind="DEVICE" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1" kind="CONTEXT" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/MemCpy (HtoD)" kind="MEMCPY_HTOD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/MemCpy (DtoH)" kind="MEMCPY_DTOH" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Compute" kind="KERNELS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Compute/section2_section2_1_ittr0_" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Streams" kind="STREAMS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Streams/2" kind="STREAM" containerstate="OPEN_ALL" filtered="false"/>
+</timelinestate>
+<pdm>
+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</pdm>
+</session>

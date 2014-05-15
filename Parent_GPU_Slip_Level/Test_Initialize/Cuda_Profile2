@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<session version="1" name="Cuda_Profile2" hscale="1.6893655684232017E-6">
+<executable file="/home/administrator/Documents/DAN/itter_spectral_comp/Parent_GPU_Slip_Level/Test_Initialize/test" profileonstart="true" concurrentkernels="true"><envs></envs></executable>
+<expert><columnprops></columnprops>
+</expert>
+<analysis activescope="APPLICATION"><visitedstages><stage name="TIMELINE"/><stage name="MULTIPROCESSOR"/><stage name="KERNEL_MEMORY"/><stage name="KERNEL_INSTRUCTION"/></visitedstages></analysis>
+<vruler width="200"/>
+<hruler>
+</hruler>
+<timelinestate>
+<timeline pathname="55989" kind="PROCESS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="55989/465069888" kind="THREAD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="55989/465069888/Runtime API" kind="RUNTIME" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="55989/465069888/Driver API" kind="DRIVER" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="55989/Profiling Overhead" kind="OVERHEADS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c" kind="DEVICE" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1" kind="CONTEXT" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/MemCpy (HtoD)" kind="MEMCPY_HTOD" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/MemCpy (DtoH)" kind="MEMCPY_DTOH" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Compute" kind="KERNELS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Compute/initialize_initialize_" kind="KERNEL" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Streams" kind="STREAMS" containerstate="OPEN_ALL" filtered="false"/>
+<timeline pathname="Tesla K20c/1/Streams/2" kind="STREAM" containerstate="OPEN_ALL" filtered="false"/>
+</timelinestate>
+<pdm>
+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</pdm>
+</session>

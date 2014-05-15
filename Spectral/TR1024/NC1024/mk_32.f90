@@ -265,6 +265,8 @@ t_1 = t
 
   enddo
 
+
+
 		call cpu_time(t)
 t_2 = t-t_1
 !print*, t_2
@@ -274,7 +276,11 @@ t_2 = t-t_1
      write(55,'(7F11.5)') 0.,0.,0.,0.,0.,0.,0.
      write(*,'(7F11.5)') dble(n_steps)*1.0d0/dble(n_steps),STRESS_VEC(n_steps,:)
   DO I = 1,n_steps
+<<<<<<< HEAD:Spectral/TR1024/NC1024/mk_32.f90
      
+=======
+     !write(*,'(7F11.5)') dble(i)*1.0d0/dble(n_steps),STRESS_VEC(i,:)
+>>>>>>> Develop_GPU_CPSOLV:Spectral/mk_32.f90
      write(55,'(7F11.5)') dble(i)*1.0d0/dble(n_steps),STRESS_VEC(i,:)
   enddo
   close (55)
@@ -285,6 +291,7 @@ t_2 = t-t_1
         DO III = 1,NCRYS
  	  write(56,'(4F20.5)'), Phi1(III)*360/120/m_fine, PHI(III)*360/120/m_fine, Phi2(III)*360/120/m_fine,1.0d0/dble(NCRYS)
 	END DO
+print *,"(Phi1, PHI, Phi2) = ", Phi1(1:16), PHI(1:16), Phi2(1:16)
  close (56)
 
   OPEN(unit=14, file='/home/administrator/Documents/DAN/itter_spectral_comp/Spectral/timing_TR1024.txt',ACCESS='append')
@@ -482,14 +489,22 @@ SUBROUTINE TEXTURE(Phi1, PHI, Phi2, w21_rec, w31_rec, w32_rec, flag, n_steps)
      angles(:,3) = angles(:,3) + twoPI
   endwhere
 
+
     !change, start,  transfering of euler angles in radians into r,s,t,q
     angles = NINT( to_deg*angles*120*m_fine/360 )
     !change, end
-
+    IF(flag==n_steps) THEN
+	!print *,"angles1 = ",angles(5,1),"angles2 = ",angles(5,2),"angles3 = ",angles(5,3)
+	!print *,"angles1 = ",angles(6,1),"angles2 = ",angles(6,2),"angles3 = ",angles(6,3)
+	!print *,"angles1 = ",angles(7,1),"angles2 = ",angles(7,2),"angles3 = ",angles(7,3)
+	!pause
+    ENDIF
   Phi1(:) = angles(:,1)
   PHI(:)  = angles(:,2)
   Phi2(:) = angles(:,3)
 
+ ! print *,"Phi1(6) = ",Phi1(6), "Phi1(8)= ", Phi1(8), "Itter= ", flag
+ ! pause
   RETURN
 
 END SUBROUTINE TEXTURE

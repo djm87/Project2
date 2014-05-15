@@ -7,6 +7,7 @@
 # Information  : Makefile http://mrbook.org/tutorials/make/            #
 #              : Compiler options: http://www.pgroup.com/doc/pgiug.pdf # 
 ########################################################################
+<<<<<<< HEAD
 
 export OMP_NUM_THREADS=10	
 
@@ -35,6 +36,32 @@ plot:
 	./gnuplot.bash
 	eog Spectral_OMP_Scaling.png &
 
+=======
+export OMP_NUM_THREADS=10
+# FLAGS sets the following compilation options: compiler version, -fast: combines 
+# several compilation optimization features, Mconcur=innermost: auto paralization of loops 
+FLAGS = -V14.1 -fast -r8 -mp 
+# FLAGS_CUDA sets the following compilation options for CUDA: Toolkit version, Compute version,
+# target processor type 
+FLAGS_CUDA =#-Mcuda=cuda5.0,cc35 -tp:x64 -ta=nvidia,time
+#Sets compiler for extension type
+F90=pgf90
+
+# Variables 
+SOURCES = Spectral_OMP.f90
+OBJECTS = $(SOURCES: .f90=.o)
+
+all: build
+
+build: Spectral_OMP
+
+Spectral_OMP: $(OBJECTS)
+	$(F90) $(FLAGS) $(FLAGS_CUDA) $(OBJECTS) -o $@ 
+.f90:
+	$(F90) $(FLAGS) $(FLAGS_CUDA) $< -o $@ 
+run: Spectral_OMP
+	./Spectral_OMP
+>>>>>>> Develop_GPU_CPSOLV
 tidy:
 	@find * | egrep "#" | xargs rm -f
 	@find * | egrep "\~" | xargs rm -f
