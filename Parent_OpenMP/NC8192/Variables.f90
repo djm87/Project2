@@ -12,9 +12,9 @@ MODULE Variables
 	
 	
 	!These are public variables used to replace the common blocks
-	REAL(RP), PUBLIC :: STRESS2BE(6,NC),STRV(6,NC) !CPSTRESS
+	REAL(RP), PUBLIC :: STRESS2BE(6,NC),STRV(6,NC) !both are actually public!CPSTRESS
 	REAL(RP), PUBLIC :: DEF1(3,3),DEF2(3,3),DEFS1(3,3),DEFS2(3,3) !CPDEF
-	REAL(RP), PUBLIC :: DRFCE2(12),DG2(12,NC),DVELP(3,3) !RSS2
+	REAL(RP), PUBLIC :: DRFCE2(12),DG2(12,NC),DVELP(3,3) !Not actual PUBLIC: DRFCE2
 	!REAL(RP), PUBLIC :: 
 	!REAL(RP), PUBLIC :: 
 	!REAL(RP), PUBLIC :: 

@@ -1,120 +1,143 @@
-Module Initialize
+Module Section2
 CONTAINS
-!Launching a three dimensional grid of 216 theads
-attributes(global) SUBROUTINE Initialize(C6P6A,C6A,SSYSMAT,NC,NSLIP)
+
+attributes(global) SUBROUTINE Section2_1_ITTR0(SLPRESA2,STRESS2BE,DRFCE2,SSYSMAT,DG2,NC,NSLIP)
 
     IMPLICIT NONE
+	
 	INTEGER, VALUE ::	NC, NSLIP
-    REAL(8), DEVICE :: C6P6A(NSLIP,36,NC),C6A(NSLIP,6,NC),SSYSMAT(NSLIP,9,NC)
-    INTEGER :: tx,ty,tz,by,bz,IC,j
-	REAL(8), SHARED :: S_SSYS(12,9),S_C6A(12,6)
+    REAL(8), DEVICE :: SLPRESA2(NSLIP,NC),STRESS2BE(6,NC),DRFCE2(NSLIP,IC),SSYSMAT(NSLIP,9,NC), &
+		DG2(NSLIP,NC)
+		
+    INTEGER :: tx,ty,by,IC,j
+	REAL(8), SHARED :: S_SSYS(12,9),S_STRESS2BE(6),S_DRFCE2(12), &
+		S_ABSDG(12),S_SLIPSIGN(12),EXPN,DGDO
 	
 	tx = threadidx%x !will be 1-12 NSLIP
-	ty = threadidx%y !will be 1-6?
-	tz = threadidx%z !will be 1?
-	bz = blockdim%z  !will be 1
-
-	IC = (blockIdx%z-1)*bz+tz
+	ty = threadidx%y !will be 16?
+	by = blockdim%y  !will be ?
+   
+	IC = (blockIdx%y-1)*by+ty
 	
-	!Read in SSYSMAT to shared memory 
-	S_SSYS(tx,ty) = SSYSMAT(tx,ty,IC)	
-	S_SSYS(tx,7) = SSYSMAT(tx,7,IC)
-	S_SSYS(tx,8) = SSYSMAT(tx,8,IC)
-	S_SSYS(tx,9) = SSYSMAT(tx,9,IC)
-    
-
-	S_C6A(tx,ty) = C6A(tx,ty,IC)
-
+	!Variables that will normally be available through public
+	!====================
+	EXPN = 100.0
+	DGDO = 0.001 
+	!====================
+	
+	DO j =1,9
+		S_SSYS(tx,j) = SSYSMAT(tx,j,IC)	
+	ENDDO
+	
+	DO j =1,6
+		S_STRESS2BE(j) = STRESS2BE(j,IC)	
+	ENDDO
+	
 	call syncthreads()
-	C6P6A(tx,1+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,1)	
-	C6P6A(tx,2+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,2)	
-	C6P6A(tx,3+(ty-1)*6,IC) = S_C6A(tx,ty)*S_SSYS(tx,3)	
-	C6P6A(tx,4+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,4)+S_SSYS(tx,7)) 
-	C6P6A(tx,5+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,5)+S_SSYS(tx,8))
-	C6P6A(tx,6+(ty-1)*6,IC) = S_C6A(tx,ty)*(S_SSYS(tx,6)+S_SSYS(tx,9))
+	
+	S_DRFCE2(tx) = 0.0D0 
+	S_DRFCE2(tx) = S_DRFCE2(tx)+S_STRESS2BE(1)*S_SSYS(tx,1)&
+				+S_STRESS2BE(2)*S_SSYS(tx,2)&
+				+S_STRESS2BE(3)*S_SSYS(tx,3)&
+				+S_STRESS2BE(4)*(S_SSYS(tx,4)+S_SSYS(tx,7))&
+				+S_STRESS2BE(5)*(S_SSYS(tx,5)+S_SSYS(tx,8))&
+				+S_STRESS2BE(6)*(S_SSYS(tx,6)+S_SSYS(tx,9))
+	
+	S_SLIPSIGN(tx) = SIGN(1.0D0,S_DRFCE2(tx))
+	DG2(tx,IC) = S_SLIPSIGN(tx)*DGDO*DABS(S_DRFCE2(tx)/SLPRESA2(tx,IC))**EXPN
+	 
+	DRFCE2(tx,IC)=S_DRFCE2(tx)
 
 	RETURN
 
-END SUBROUTINE Initialize
-END Module Initialize
+END SUBROUTINE Section2_1_ITTR0
+END Module Section2
 
 program main
-  use Initialize
-  use cudafor
-  INTEGER, PARAMETER :: NC = 1024, NREPS = 1
-  INTEGER, PARAMETER :: NSLIP = 12
+	use Section2
+	use cudafor
+	INTEGER, PARAMETER :: NC = 1024, NREPS = 1000
+	INTEGER, PARAMETER :: NSLIP = 12
 
-  ! matrix data
-  REAL(8):: Atemp(N,N), btemp(N), diff
-  REAL(8), ALLOCATABLE, PINNED ::C6A(:,:,:),SSYSMAT(:,:,:), C6P6A(:,:,:), C6P6A_GPU(:,:,:)
-  REAL(8), ALLOCATABLE, DEVICE :: dC6A(:,:,:),dSSYSMAT(:,:,:), dC6P6A(:,:,:)
-  type(cudaEvent) :: start, stop
-  type(dim3) :: blocks
-  type(dim3) :: threads
- 
-  blocks = dim3(1,1,NC)
-  threads = dim3(12,6,1) 
+	! matrix data
+	REAL(8):: Atemp(N,N), btemp(N), diff
+	REAL(8), ALLOCATABLE, PINNED ::SLPRESA2(:,:),DRFCE2(:,:),STRESS2BE(:,:),SSYSMAT(:,:,:), DRFCE2_GPU(:,:),DG2(:,:)
+	REAL(8), ALLOCATABLE, DEVICE :: dSLPRESA2(:,:),dDRFCE2(:,:),dSTRESS2BE(:,:),dSSYSMAT(:,:,:),dDG2(:,:)
+	type(cudaEvent) :: start, stop
+	type(dim3) :: blocks
+	type(dim3) :: threads
 
-  istat = cudaEventCreate(start)
-  istat = cudaEventCreate(stop)
+	blocks = dim3(1,NC,1)
+	threads = dim3(12,1,1) 
+
+	istat = cudaEventCreate(start)
+	istat = cudaEventCreate(stop)
+
+	ALLOCATE(SLPRESA2(NSLIP,NC),DRFCE2(NSLIP,NC),STRESS2BE(6,NC),SSYSMAT(NSLIP,9,NC),DRFCE2_GPU(NSLIP,NC),DG2(NSLIP,NC)) 
+	ALLOCATE(dSLPRESA2(NSLIP,NC),dSTRESS2BE(6,NC),dDRFCE2(NSLIP,NC),dSSYSMAT(NSLIP,9,NC),dDG2(NSLIP,NC))
+
+	OPEN(1,FILE='STRESS2BE.txt')
+	OPEN(2,FILE='SLPRESA2.txt')
+	OPEN(3,FILE='SSYSMAT.txt')
+	OPEN(4,FILE='DRFCE2.txt')
   
-  ALLOCATE(C6P6A(NSLIP,36,NC),C6P6A_GPU(NSLIP,36,NC),C6A(NSLIP,6,NC),SSYSMAT(NSLIP,9,NC)) 
-  ALLOCATE(dC6P6A(NSLIP,36,NC),dC6A(NSLIP,6,NC),dSSYSMAT(NSLIP,9,NC))
-
-  OPEN(1,FILE='C6A.txt')
-  OPEN(2,FILE='C6P6A.txt')
-  OPEN(4,FILE='SSYSMAT.txt')
   
-  DO IC = 1,NC
-	DO I = 1,NSLIP
-		DO II = 1,9
-			READ(4,*) SSYSMAT(I,II,IC)
+	DO IC = 1,NC
+		DO I = 1,NSLIP
+			DO II = 1,9
+				READ(3,*) SSYSMAT(I,II,IC)
 
-			IF(IC==1 .and. I==1) THEN
-				!print*," ", SSYSMAT(I,II,IC)
-			ENDIF
+				IF(IC==1 .and. I==1) THEN
+					!print*," ", SSYSMAT(I,II,IC)
+				ENDIF
+			ENDDO
+			READ(2,*) SLPRESA2(I,IC)
+			READ(4,*) DRFCE2(I,IC)
 		ENDDO
-		DO III = 1,6 
-			READ(1,*) C6A(I,III,IC)
+		DO I = 1,6 
+			READ(1,*) STRESS2BE(I,IC)
 		ENDDO
+
 		
-		DO IIII = 1,36
-			READ(2,*) C6P6A(I,IIII,IC)
-		ENDDO	
 	ENDDO
-   ENDDO
-   
-  dC6A = C6A
-  dSSYSMAT=SSYSMAT
 
-  time = 0.d0
-     call Initialize<<<blocks, threads>>>(dC6P6A,dC6A,dSSYSMAT,NC,NSLIP)
-  istat = cudaEventRecord(start, 0)
-  do j = 1, NREPS
-     call Initialize<<<blocks, threads>>>(dC6P6A,dC6A,dSSYSMAT,NC,NSLIP)
-  end do
-  istat = cudaEventRecord(stop, 0)    
-  istat = cudaDeviceSynchronize()
-  istat = cudaEventElapsedTime(time, start, stop)
-  time = time / 1.0d3
-  print*,"time = ", time, "NREPS = ", NREPS
+	CLOSE(1)
+	CLOSE(2)
+	CLOSE(3)
+	CLOSE(4)
+	
+	dSLPRESA2 = SLPRESA2
+	dSTRESS2BE = STRESS2BE
+	dSSYSMAT=SSYSMAT
 
-  C6P6A_GPU =dC6P6A
-  DO IC = 1,NC
-	DO I = 1,NSLIP
-		DO II = 1,36
-			diff = C6P6A_GPU(I,II,IC)-C6P6A(I,II,IC)
+	time = 0.d0
+	call Section2_1_ITTR0<<<blocks, threads>>>(dSLPRESA2,dSTRESS2BE,dDRFCE2,dSSYSMAT,dDG2,NC,NSLIP)
+	istat = cudaEventRecord(start, 0)
+	do j = 1, NREPS
+		call Section2_1_ITTR0<<<blocks, threads>>>(dSLPRESA2,dSTRESS2BE,dDRFCE2,dSSYSMAT,dDG2,NC,NSLIP)
+	end do
+	istat = cudaEventRecord(stop, 0)    
+	istat = cudaDeviceSynchronize()
+	istat = cudaEventElapsedTime(time, start, stop)
+	time = time / 1.0d3
+	print*,"time = ", time, "NREPS = ", NREPS
+
+	DRFCE2_GPU =dDRFCE2
+	DO IC = 1,NC	
+		DO I = 1,NSLIP
+			diff = DRFCE2_GPU(I,IC)-DRFCE2(I,IC)
 			IF(diff > 0.005) THEN 
-				print*, "Incorrect C6P6A", diff, "(",I,II,IC,")"
+				print*, "Incorrect DRFCE2", diff, "(",I,")"
+				!print*, "DRFCE2", DRFCE2_GPU(I,IC)
+				!print*, "DRFCE2", DRFCE2(I,IC)
 				pause
 			ENDIF
 		ENDDO
 	ENDDO
-ENDDO
-  gflops = 6.d0*9.d0*REAL(NSLIP)*REAL(NC)*REAL(NREPS)/time/1d9 !Losely written as the number add/multiplications
-  write (*,901) gflops
-  901 format(f10.3,' GFlops/s')
-  
-  DEALLOCATE(C6P6A,C6A,SSYSMAT,C6P6A_GPU) 
-  DEALLOCATE(dC6P6A,dC6A,dSSYSMAT)
+	gflops = 6.d0*9.d0*REAL(NSLIP)*REAL(NC)*REAL(NREPS)/time/1d9 !Losely written as the number add/multiplications
+	write (*,901) gflops
+	901 format(f10.3,' GFlops/s')
+
+	DEALLOCATE(SLPRESA2,DRFCE2,STRESS2BE,SSYSMAT,DRFCE2_GPU,DG2) 
+	DEALLOCATE(dSLPRESA2,dSTRESS2BE,dDRFCE2,dSSYSMAT,dDG2)
 end program
