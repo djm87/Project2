@@ -783,7 +783,7 @@ call cpu_time(ti)
 		  DGDO = GDO*DTIME 
 		  EXPN= 1.0D0/EXPM 
 		  DMAX = 0.05D0
-		  
+		 call cpu_time(ti)  
 		  DO I = 1,NSLIP
 			DO II = 1,6 
 			  DO III = 1,6 
@@ -807,6 +807,11 @@ call cpu_time(ti)
 											SSYSMAT(3,1,I,IC))
 			  ENDDO
 		  ENDDO   
+
+		call cpu_time(tf)
+		!if(ISTEP == 2) THEN
+		print*,"Time1111= ",tf-ti
+			pause
 	 
 	!     START OF SOLUTION PROCEDURE
 	 111  CONTINUE 
@@ -814,7 +819,7 @@ call cpu_time(ti)
 		  DO I = 1,NSLIP
 			 DRFCE2(I) = 0.0D0 
 		  ENDDO        
-
+		
 		  DO JJ = 1,NSLIP
 			   DRFCE2(JJ) = DRFCE2(JJ)+STRESS2BE(1,IC)*SSYSMAT(1,1,JJ,IC)
 			   DRFCE2(JJ) = DRFCE2(JJ)+STRESS2BE(2,IC)*SSYSMAT(2,2,JJ,IC)
@@ -839,6 +844,12 @@ call cpu_time(ti)
 				ABSDGMAX = DMAX1(ABSDGMAX,ABSDG(I))
 			 ENDIF
 		  ENDDO
+		call cpu_time(tf)
+		!if(ISTEP == 2) THEN
+		!	print*,"Time1111= ",tf-ti
+		!	pause
+		!ENDIF
+
 
 		  IF (ABSDGMAX.GT.DMAX.AND.IITR.NE.0.AND.ICORR.LE.30)THEN
 		   DO J=1,6
