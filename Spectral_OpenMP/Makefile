@@ -3,39 +3,40 @@
 # CUDA Makefile                                                        #
 # Author       : Daniel Savage                                         #
 # Date         : 6/30/2013                                             #
-# Description  : Compiles Spectral code with CUDA implementation       #
+# Description  : Compiles and builds results for test cases OpenMP     #
 # Information  : Makefile http://mrbook.org/tutorials/make/            #
 #              : Compiler options: http://www.pgroup.com/doc/pgiug.pdf # 
 ########################################################################
 
-# FLAGS sets the following compilation options: compiler version, -fast: combines 
-# several compilation optimization features, Mconcur=innermost: auto paralization of loops 
-FLAGS = -V14.1 -fast -r8  
-# FLAGS_CUDA sets the following compilation options for CUDA: Toolkit version, Compute version,
-# target processor type 
-FLAGS_CUDA =#-Mcuda=cuda5.0,cc35 -tp:x64 -ta=nvidia,time
-#Sets compiler for extension type
-F90=pgf90
+export OMP_NUM_THREADS=10	
 
-# Variables 
-SOURCES = mk_32.f90
-OBJECTS = $(SOURCES: .f90=.o)
+# Project folders that contain test cases
+PROJECTS ?= $(shell find PROJECTS ?= $(shell find TR1024/NC256 TR1024/NC512 TR1024/NC1024 TR1024/NC2048 TR1024/NC4096 TR1024/NC8192 TR1024/NC16384 -name Makefile) -name Makefile)
+	
 
-all: build
+%.ph_build :
+	+@$(MAKE) -C $(dir $*) $(MAKECMDGOALS)
 
-build: Spectral_OMP
+%.ph_clean : 
+	+@$(MAKE) -C $(dir $*) clean $(USE_DEVICE)
 
-Spectral_OMP: $(OBJECTS)
-	$(F90) $(FLAGS) $(FLAGS_CUDA) $(OBJECTS) -o $@ 
-.f90:
-	$(F90) $(FLAGS) $(FLAGS_CUDA) $< -o $@ 
-run: Spectral_OMP
-	./Spectral_OMP
+all:  $(addsuffix .ph_build,$(PROJECTS))
+	@echo "Finished building Spectral_GPU Cases"
+
+build: $(addsuffix .ph_build,$(PROJECTS))
+       
+
+run: $(addsuffix .ph_build,$(PROJECTS))
+	make tidy
+	make plot 
+	@echo "Finished building Spectral_GPU Cases"
+
+plot: 
+	./gnuplot.bash
+	eog Spectral_GPU_Scaling.png &
+
 tidy:
 	@find * | egrep "#" | xargs rm -f
-	@find * | egrep "\~" | xargs rm -f	
+	@find * | egrep "\~" | xargs rm -f
 
-# Cleans 
-.PHONY: clean
-clean:
-	rm *.mod Spectral_OMP
+clean: tidy $(addsuffix .ph_clean,$(PROJECTS)) 
