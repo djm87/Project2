@@ -70,7 +70,7 @@
 
       OPEN(7, FILE=FILENAME2) 
       OPEN(9, FILE=FILENAME)                 
-      OPEN(10, FILE=FILENAME1, STATUS='replace')    
+      OPEN(10, FILE=FILENAME1,ACCESS='append')     
 
  
       ALLOCATE (SSYSMAT(3,3,12,NC)) 

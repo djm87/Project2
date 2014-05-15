@@ -3,45 +3,40 @@
 # CUDA Makefile                                                        #
 # Author       : Daniel Savage                                         #
 # Date         : 6/30/2013                                             #
-# Description  : Compiles Spectral code with CUDA implementation       #
+# Description  : Compiles and builds results for test cases OpenMP     #
 # Information  : Makefile http://mrbook.org/tutorials/make/            #
 #              : Compiler options: http://www.pgroup.com/doc/pgiug.pdf # 
 ########################################################################
 
-export OMP_NUM_THREADS=10
+export OMP_NUM_THREADS=10	
 
-# FLAGS sets the following compilation options: compiler version, -fast: combines 
-# several compilation optimization features, Mconcur=innermost: auto paralization of loops 
-FLAGS = -V13.4 -mp -fast -Mipa=fast,inline #-Minfo=ipa #all,inline  #-Mvect=levels:4 -lpthread
-# FLAGS_CUDA sets the following compilation options for CUDA: Toolkit version, Compute version,
-# target processor type 
-FLAGS_CUDA =#-Mcuda=cuda5.0,cc35 -tp:x64
+# Project folders that contain test cases
+PROJECTS ?= $(shell find NC256 NC512 NC1024 NC2048 NC4096 NC8192 NC16384 -name Makefile)
+	
 
-#Sets compiler for extension type
-F90=pgfortran
+%.ph_build :
+	+@$(MAKE) -C $(dir $*) $(MAKECMDGOALS)
 
-# Variables 
-SOURCES = Variables.f90 cptyin.f90 #CUDA_Kernels.f90
-OBJECTS = $(SOURCES: .f90=.o)
-#EXECUTABLE = CUDA_Parent
+%.ph_clean : 
+	+@$(MAKE) -C $(dir $*) clean $(USE_DEVICE)
 
-all: build
+all:  $(addsuffix .ph_build,$(PROJECTS))
+	@echo "Finished building OpenMP Cases"
 
-build: OMP_Parent
+build: $(addsuffix .ph_build,$(PROJECTS))
+       
 
+run: $(addsuffix .ph_build,$(PROJECTS))
+	make tidy
+	make plot 
+	@echo "Finished building OpenMP Cases"
 
-OMP_Parent: $(OBJECTS)
-	$(F90) $(FLAGS) $(OBJECTS) -o $@ #$(FLAGS_CUDA) 
-.f90:
-	$(F90) $(FLAGS)  $< -o $@ 
-run: OMP_Parent
-	./OMP_Parent 
+plot: 
+	./gnuplot.bash
+	eog OMP_Scaling.png &
 
 tidy:
 	@find * | egrep "#" | xargs rm -f
 	@find * | egrep "\~" | xargs rm -f
 
-# Cleans 
-.PHONY: clean
-clean:
-	 rm *.mod *.o *.oo OMP_Parent
+clean: tidy $(addsuffix .ph_clean,$(PROJECTS)) 
